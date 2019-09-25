@@ -75,7 +75,8 @@ class HomePage extends React.Component{
     this.props.firebase.db.ref('quotes/' + uuid() ).set({
         owner:authUser.uid,
         ownerName:authUser.username,
-        items:{},
+        projectName:'',
+        items:[null],
         dateCreated:date,
     });
 
@@ -116,10 +117,13 @@ class HomePage extends React.Component{
                               <strong>owner:</strong> {quote.ownerName}
                             </Table.Cell>
                             <Table.Cell>
-                              <strong>data:</strong> {quote.data}
+                              <strong>projectName:</strong> {quote.projectName}
                             </Table.Cell>
                             <Table.Cell>
-                              <strong>data:</strong> {quote.dateCreated}
+                              <strong>itemCount:</strong> {quote.itemCount}
+                            </Table.Cell>
+                            <Table.Cell>
+                              <strong>date:</strong> {quote.dateCreated}
                             </Table.Cell>
                             <Table.Cell collapsing>
                               <Button icon size='small'
