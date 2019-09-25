@@ -4,6 +4,10 @@ import {
   Route,
 } from 'react-router-dom';
 
+import {Container} from 'semantic-ui-react'
+import 'semantic-ui-css/semantic.min.css'
+
+
 import Navigation from '../Navigation';
 import LandingPage from '../Landing';
 import SignUpPage from '../SignUp';
@@ -17,10 +21,12 @@ import { withFirebase } from '../Firebase';
 
 import { withAuthentication } from '../Session';
 
+
 const App = () => (
   <Router>
-    <div>
-      <Navigation />
+    <Navigation />
+
+    <Container>
       <hr />
       <Route exact path={ROUTES.LANDING} component={LandingPage} />
       <Route path={ROUTES.SIGN_UP} component={SignUpPage} />
@@ -32,7 +38,7 @@ const App = () => (
       <Route path={ROUTES.HOME} component={HomePage} />
       <Route path={ROUTES.ACCOUNT} component={AccountPage} />
       <Route path={ROUTES.ADMIN} component={AdminPage} />
-    </div>
+    </Container>
   </Router>
 );
 export default withAuthentication(App);

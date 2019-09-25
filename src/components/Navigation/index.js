@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import {Menu} from 'semantic-ui-react'
+
 
 import SignOutButton from '../SignOut';
 import * as ROUTES from '../../constants/routes';
@@ -19,37 +21,39 @@ const Navigation = () => (
   </AuthUserContext.Consumer>
 );
 
-const NavigationAuth = ({ authUser }) => (
-  <ul>
-    <li>
-      <Link to={ROUTES.LANDING}>Landing</Link>
-    </li>
-    <li>
-      <Link to={ROUTES.HOME}>Home</Link>
-    </li>
-    <li>
-      <Link to={ROUTES.ACCOUNT}>Account</Link>
-    </li>
-    {!!authUser.roles[ROLES.ADMIN] && (
-      <li>
-        <Link to={ROUTES.ADMIN}>Admin</Link>
-      </li>
-    )}
-    <li>
-      <SignOutButton />
-    </li>
-  </ul>
-);
+const NavigationAuth = ({ authUser }) => {
 
-const NavigationNonAuth = () => (
-  <ul>
-    <li>
-      <Link to={ROUTES.LANDING}>Landing</Link>
-    </li>
-    <li>
-      <Link to={ROUTES.SIGN_IN}>Sign In</Link>
-    </li>
-  </ul>
-);
+  var activeItem = 'landing'
+
+  return (<Menu secondary>
+    <Menu.Item as={Link} to={ROUTES.LANDING} name='landing' active={activeItem === 'landing'}  />
+    <Menu.Item as={Link} to={ROUTES.HOME} name='home' active={activeItem === 'home'}  />
+    <Menu.Item as={Link} to={ROUTES.ACCOUNT} name='account' active={activeItem === 'account'}  />
+      {!!authUser.roles[ROLES.ADMIN] && (
+        <Menu.Item as={Link} to={ROUTES.ADMIN} name='admin' active={activeItem === 'admin'}  />
+      )}
+    <Menu.Menu position='right'>
+      <Menu.Item as={SignOutButton} name='logout' />
+    </Menu.Menu>
+  </Menu>)
+}
+
+
+
+const NavigationNonAuth = () => {
+  var activeItem = 'landing'
+
+  return (
+    <Menu secondary>
+        <Menu.Item as={Link} to={ROUTES.LANDING} name='landing' active={activeItem === 'landing'}  />
+        <Menu.Menu position='right'>
+
+          <Menu.Item as={Link} to={ROUTES.SIGN_IN} name='sign in' active={activeItem === 'sign in'}  />
+        </Menu.Menu>
+
+    </Menu>
+  )
+}
+
 
 export default Navigation;
