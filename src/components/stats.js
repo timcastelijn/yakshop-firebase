@@ -1,14 +1,20 @@
 import React from 'react';
-import { Container, Header, Image, Table, Divider } from 'semantic-ui-react'
+import {compose} from 'recompose'
+import { FirebaseContext, withFirebase } from './Firebase';
+import { withAuthorization } from './Session';
+import { AuthUserContext } from './Session';
+
+import { Container, Header, Image, Table, Divider, Select, Button, Confirm } from 'semantic-ui-react'
 
 import { Checkbox } from 'semantic-ui-react'
 import { Input, Menu } from 'semantic-ui-react'
 import Papa from 'papaparse'
 
+import cloneDeep from 'lodash/cloneDeep.js'
+
 import {PivotTable} from './pivottable.js'
 
-
-import * as moment from 'moment'
+import * as moment from 'moment-timezone'
 
 function round(float, digits){
   if (digits < 0) {
@@ -17,50 +23,116 @@ function round(float, digits){
   return Math.round(float * 10**digits ) / 10**digits
 }
 
-class NavBar extends React.Component{
 
-  constructor(props){
+class MyFileInput extends React.Component {
+  constructor(props) {
     super(props);
+    this.state = {
+      inputValue: '',
+      file:null,
+      confirmOpen:false
+    };
+
+    this.loadFileContents = this.loadFileContents.bind(this)
   }
 
-  state = { activeItem: 'Overview' }
-
-  handleItemClick = (e, { name }) => {
-
-    this.setState({ activeItem: name })
-
-    this.props.handleChange(name)
-  }
-
-
-  render(){
-    const { activeItem } = this.state
-
+  render() {
     return (
-      <Menu secondary>
-        <Menu.Item
-          name='List'
-          active={activeItem === 'List'}
-          onClick={this.handleItemClick}
-        />
-        <Menu.Item
-          name='Overview'
-          active={activeItem === 'Overview'}
-          onClick={this.handleItemClick}
-        />
-      </Menu>
-    )
+        <div>
+          <input type='file' value={this.state.inputValue} onChange={ evt => this.updateInputValue(evt)}/>
+          <Button onClick={ ()=>{ this.setState( {confirmOpen:true} )} }>Load</Button>
+          <Confirm
+            content={'you are about to upload a large amount of data with the risk of damaging the database integrity. Are you sure?'}
+            open={this.state.confirmOpen}
+            onCancel={ ()=>{this.setState( {confirmOpen:false} )} }
+            onConfirm={ this.loadFileContents }
+            />
+        </div>
+    );
   }
 
-}
+  convertAndUpload(text){
+    const csv = Papa.parse(text);
 
-function createCommandList(csv){
+    let newLog = {}
+    for (let [i, line] of csv.data.entries()) {
+
+      const command = line[0]
+      const date = line[1]
+      const time = line[2]
+      const dateTime = date + ', ' + time
+
+      var dt_temp = moment(dateTime, "DD/MM/YYYY, hh:mm:ss");
+      var dt = moment(dt_temp).format('YYMMDD-HHmmss')
+
+      var timeStamp = moment(dateTime, "DD-MM-YYYY, hh:mm:ss").unix();
+
+      if ( dt && command) {
+        newLog[`${dt}-${command}`] = {
+          command:command,
+          date:date,
+          time:time,
+          number:line[3]||'',
+          filename:line[4]||'',
+          countTotal:line[5]||'',
+          count:line[6]||'',
+          timeStamp:timeStamp
+        };
+      }
+    }
+    this.props.firebase.db.ref('biesseLogs/').set(newLog);
+  }
+
+
+  loadFileContents(){
+
+    // close confirm
+    this.setState({ confirmOpen: false })
+
+    var reader = new FileReader();
+     reader.onload = (e) => {
+       // Entire file
+       // By lines
+       var lines = e.target.result.split('\n');
+
+       this.convertAndUpload(e.target.result)
+     };
+
+     if (this.state.file) {
+       reader.readAsText(this.state.file);
+     }else{
+       alert('no file selected')
+     }
+
+     this.setState({file:null})
+
+
+  }
+
+  updateInputValue(evt) {
+    this.setState({
+      inputValue: evt.target.value,
+      file:evt.target.files[0]
+    });
+
+
+  }
+};
+
+
+
+
+function createCommandList(csv, context){
   let tableState = []
   let previousStart = null
 
   let skippedLines = 0
 
+  let newLog = {}
+
+
   for (let [i, line] of csv.data.entries()) {
+
     const command = line[0]
     const date = line[1]
     const time = line[2]
@@ -68,11 +140,20 @@ function createCommandList(csv){
 
     const dateTime = date + ', ' + time
 
+    var timeStamp = moment(dateTime, "DD/MM/YYYY, hh:mm:ss");
 
-    var timeStamp = moment(dateTime, "DD-MM-YYYY, hh:mm:ss");
+    var dt = moment(timeStamp).format('YYMMDD-HHmmss')
+
+    if ( dt && command) {
+      newLog[`${dt}-${command}`] = {
+        command:command,
+        date:date,
+      };
+    }
 
 
-      if (  command === 'STOP' || command === 'EXE'){
+
+      if (  (command === 'STOP' || command === 'EXE') && previousStart ){
         // if (previousStart.filename === filename ) {
 
           let duration = ( timeStamp - previousStart.timeStamp ) / 1000 / 60;
@@ -95,6 +176,9 @@ function createCommandList(csv){
             repair:repair
           }
           tableState.push( entry )
+
+          // make sure stop is not count twice after start
+          previousStart = null
         // }else{
         //   console.log('skip', line);
         //   skippedLines++
@@ -106,19 +190,102 @@ function createCommandList(csv){
       }
   }
 
+  // context.props.firebase.db.ref('/logs').set(newLog);
+
+
   console.log('skipped lines: ', skippedLines);
 
   return tableState
 }
 
 
-export class Stats extends React.Component{
+function parseLog(logsObject){
+
+  let previousStart = {}
+
+  let extraTable = [['project', 'date', 'week', 'month', 'filename', 'duration [min]', 'duration [h]', 'material', 'type']]
+
+  let n = 0
+
+  for (let [k,entry] of Object.entries(logsObject)) {
+
+    // console.log(k);
+    n++
+
+    const {command, date, time, timeStamp, filename, countTotal, count} = entry
+
+    if (filename == "") {
+      continue
+    }
+
+    if (  (command === 'STOP' || command === 'EXE') ){
+
+      if (previousStart[filename] && parseInt(count) == parseInt(previousStart[filename].count ) +1 ) {
+
+        if (previousStart[filename].date != entry.date) {
+          console.log('WARNING, file milled on two dates', previousStart[filename], entry);
+          continue
+        }
+
+        let duration = ( timeStamp - previousStart[filename].timeStamp ) / 60;
+
+        if (duration < 0) {
+            console.log('WARNING, inverted date found', previousStart[filename], entry);
+        }
+
+
+        // let project = filename.match(/TNM(\s|-|_)?\d+/g);
+        let project = filename.split("/")[0];
+        let material = filename.split("/").pop().split("_")[3];
+        let repair = /repair|Repair|!R_/.test(filename)? 'repair' : 'production';
+        repair = /Aanslag|aanslag/.test(filename)? 'aanslag' : repair;
+
+        let startDate = previousStart[filename].date
+
+        let newEntry = [
+          project,
+          startDate,
+          moment(startDate, "DD/MM/YYYY").isoWeek(),
+          moment(startDate, "DD/MM/YYYY").month(),
+          filename,
+          round( duration, 2),
+          round( duration/60, 2),
+          material,
+          repair
+        ]
+        extraTable.push( newEntry )
+        previousStart[filename] = null
+        // make sure stop is not count twice after start
+        // previousStart = null
+      // }else{
+      //   console.log('skip', line);
+      //   skippedLines++
+      // }
+      }
+    }
+
+    if (command === 'START') {
+      if(!previousStart[filename] ){
+        // only save:
+        //   the first start of a specific filename
+        //   the a new count
+        previousStart[filename] = cloneDeep(entry)
+      }
+    }
+  }
+  // console.log(extraTable);
+
+  return extraTable
+}
+
+class Stats extends React.Component{
   constructor(){
       super()
 
       this.state= {
         tableState:[],
         isLoaded:false,
+        files:[],
         file:null,
         activeModus:'Overview',
       }
@@ -126,69 +293,57 @@ export class Stats extends React.Component{
 
   componentDidMount(){
 
-    this.fetchAsync()
+    var startDate = moment.tz("Europe/Amsterdam").subtract(1, 'month').unix();
+    var endDate = moment.tz("Europe/Amsterdam").unix();
 
-  }
+    console.log(startDate, endDate);
+
+    // var startDate = 1569593332 - 3600*24*14;
+    // var endDate = 1569593332;
+
+
+    var ref = this.props.firebase.db.ref("biesseLogs");
+    ref.orderByChild('timeStamp').startAt(startDate).endAt(endDate).on("value", (snapshot)=> {
+    // this.props.firebase.db.ref('biesseLogs/').on('value', snapshot => {
+
+      let logsObject = snapshot.val();
+
+      if (logsObject) {
+
+        let table = parseLog(logsObject)
 
 
 
-  async fetchAsync(){
-
-    const filename = '../logfiles/ma 23-09-2019_prod.log'
-
-    const response = await fetch(filename);
-    const text = await response.text();
-
-    const creation_date = response.headers.get('Date');
-
-    this.setState({file:{filename:filename, creation_date:creation_date}})
-
-    const csv = Papa.parse(text);
-
-    console.log('CSV', csv);
-
-    let table = createCommandList(csv)
-
-    if (this.state.activeModus === 'List'){
-      this.setState({tableState:table, isLoaded:true})
-
-    }else {
-      let extraTable = [['project', 'date', 'week', 'month', 'filename', 'duration [min]', 'duration [h]', 'material', 'type']]
-      for (let item of table) {
-        let week = moment(item.date, "YYYY-MM-DD").isoWeek();
-        let month = moment(item.date, "YYYY-MM-DD").month();
-        extraTable.push( [item.project, item.date, week, month, item.filename, item.duration, item.duration/60, item.material, item.repair] )
+        this.setState({
+          tableState:table,
+          isLoaded:true
+        })
       }
-
-      this.setState({tableState:extraTable, isLoaded:true})
-    }
-
-  }
-
-  handleModusChange = (modus)=>{
+    });
 
 
-    this.setState({ activeModus: modus })
+    //
+    // this.props.firebase.db.ref('biesseLogs/').orderByChild("timeStamp").startAt(startDate).endAt(endDate)
+    //   .on("value", (snapshot)=>{
+    //     console.log("got the data!", snapshot);
+    //   });
 
-    this.setState({tableState:[], isLoaded:false})
-    this.fetchAsync()
-  }
-  onFileChangeHandler=event=>{
 
-      console.log(event.target.files[0])
-      this.setState({
-        selectedFile: event.target.files[0],
-        loaded: 0,
-      })
+
+
+    // this.fetchAsync()
 
   }
 
-  onFileClickHandler = () => {
-    const data = new FormData()
-    data.append('file', this.state.selectedFile)
+  componentWillUnmount(){
+    this.props.firebase.db.ref('biesseLogs/').off()
   }
+
+
 
   render(){
+
+    const {files} = this.state.files
     return (
       <Container>
         {this.state.file?
@@ -202,11 +357,8 @@ export class Stats extends React.Component{
 
 
 
+
         <Divider hidden></Divider>
-        <Input type="file" name="file" onChange={this.onFileChangeHandler}></Input>
-        <button type="button" className="btn btn-success btn-block" onClick={this.onFileClickHandler}>Upload</button>
-        <Divider hidden></Divider>
-        <NavBar handleChange={this.handleModusChange}></NavBar>
         <Divider hidden></Divider>
 
         {!this.state.isLoaded?
@@ -254,8 +406,21 @@ export class Stats extends React.Component{
         }
 
         <Divider hidden></Divider>
+        <h2>upload new logfiles</h2>
+        <FirebaseContext.Consumer>
+          {firebase => <MyFileInput firebase={firebase}/>}
+        </FirebaseContext.Consumer>
+
+        <Divider hidden></Divider>
 
       </Container>
     )
   }
 }
+
+const condition = authUser => !!authUser;
+
+export default compose(
+  withAuthorization(condition),
+  withFirebase,
+)(Stats);

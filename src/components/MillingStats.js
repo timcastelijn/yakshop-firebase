@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { AuthUserContext, withAuthorization } from './Session';
-import {Stats} from './stats.js'
+import Stats from './stats.js'
 
 
 const MillingStats = () => (

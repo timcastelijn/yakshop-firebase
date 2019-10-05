@@ -25,6 +25,8 @@ const NavigationAuth = ({ authUser }) => {
 
   var activeItem = 'landing'
 
+  console.log(Object.keys(authUser.roles).length > 0);
+
   return (<Menu secondary>
     <Menu.Item as={Link} to={ROUTES.LANDING} name='landing' active={activeItem === 'landing'}  />
     <Menu.Item as={Link} to={ROUTES.HOME} name='home' active={activeItem === 'home'}  />
@@ -32,7 +34,7 @@ const NavigationAuth = ({ authUser }) => {
 
     <Menu.Menu position='right'>
       <Menu.Item as={Link} to={ROUTES.ACCOUNT} name='account' active={activeItem === 'account'}  />
-        {!!authUser.roles[ROLES.ADMIN] && (
+        {!!(Object.keys(authUser.roles).length > 0 && authUser.roles.indexOf[ROLES.ADMIN]!=-1) && (
           <Menu.Item as={Link} to={ROUTES.ADMIN} name='admin' active={activeItem === 'admin'}  />
         )}
       <Menu.Item as={SignOutButton} name='logout' />

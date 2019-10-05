@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import { compose } from 'recompose';
+import {Button, Table, Icon, Confirm} from 'semantic-ui-react'
 
 import { withFirebase } from '../Firebase';
 import { withAuthorization } from '../Session';
 import * as ROLES from '../../constants/roles';
-
+import SignUpPage from '../SignUp'
+import ComponentTypes from '../ComponentTypes.js'
 
 class AdminPage extends Component {
   constructor(props) {
@@ -44,38 +46,50 @@ class AdminPage extends Component {
         <p>
           The Admin Page is accessible by every signed in admin user.
         </p>
+
+        <SignUpPage />
         {loading && <div>Loading ...</div>}
         <UserList users={users} />
+
+        <h1> componentTypes</h1>
+        <ComponentTypes />
       </div>
     );
   }
 }
 
 const UserList = ({ users }) => (
-  <ul>
-    {users.map(user => (
-      <li key={user.uid}>
-        <span>
-          <strong>ID:</strong> {user.uid}
-        </span>
-        <span>
-          <strong>E-Mail:</strong> {user.email}
-        </span>
-        <span>
-          <strong>Username:</strong> {user.username}
-        </span>
-      </li>
-    ))}
-  </ul>
+  <Table>
+    <Table.Body>
+      {users.map(user => (
+        <Table.Row key={user.uid}>
+          <Table.Cell>
+            <strong>ID:</strong> {user.uid}
+          </Table.Cell>
+          <Table.Cell>
+            <strong>E-Mail:</strong> {user.email}
+          </Table.Cell>
+          <Table.Cell>
+            <strong>Username:</strong> {user.username}
+          </Table.Cell>
+          <Table.Cell>
+            { user.roles && user.roles.map((role, i)=>(
+                <div key={i}>{role}</div>
+              ))}
+          </Table.Cell>
+        </Table.Row>
+      ))}
+    </Table.Body>
+
+  </Table>
+
 );
 
 const condition = (authUser) => {
 
   console.log('condition', authUser, ROLES.ADMIN);
-  return authUser && !!authUser.roles[ROLES.ADMIN];
+  return authUser && !! (Object.keys(authUser.roles).length > 0 && authUser.roles.indexOf[ROLES.ADMIN] != -1) ;
 }
-
-
 
 
 export default compose(
