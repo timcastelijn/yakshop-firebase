@@ -80,7 +80,7 @@ class MyFileInput extends React.Component {
         };
       }
     }
-    this.props.firebase.db.ref('biesseLogs/').set(newLog);
+    this.props.firebase.db.ref('biesseLogs/').update(newLog);
   }
 
 
@@ -310,8 +310,12 @@ class Stats extends React.Component{
 
       if (logsObject) {
 
+        console.log(logsObject);
+
         let table = parseLog(logsObject)
 
+
+        console.log(table);
 
 
         this.setState({

@@ -10,6 +10,90 @@ import { withAuthorization } from '../Session';
 import { AuthUserContext } from '../Session';
 
 import {Divider, Form, Table, Button, Icon, Input, Container, Select} from 'semantic-ui-react'
+import { Header, Modal } from 'semantic-ui-react'
+
+import GoogleApi from './GoogleApi.js'
+
+
+const googleApi = new GoogleApi()
+const LIST = []
+const PRICETABLE ={}
+
+
+async function getData(){
+  let sheet_id = '1zFOYXGWqCkAikd9tYFYlg-5wxXuC1biZ1RveHO_jWJk'
+  let range = 'Materialen!A1:M88';
+
+  let templist = await googleApi.getSheetData(sheet_id, range);
+
+  let keys = []
+  for (let item of templist) {
+    if (keys.indexOf(item.id) != -1) {
+      continue
+    }
+    keys.push(item.id)
+    PRICETABLE[item.id] = item['prijs/pt']
+    LIST.push({key:item.id, value:item.id, text:item.name, data:item})
+  }
+
+  console.log(PRICETABLE);
+}
+getData()
+
+class Block{
+  constructor(type){
+      this.type = type
+  }
+
+
+  changeType(type, properties){
+    this.type = type
+
+    for (let prop of this.properties) {
+
+    }
+  }
+}
+
+// const PropertyTable = ({item})=>(
+//   <ul>
+//     {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
+//       <li key={index2}>{prop.propname}:{prop.default}</li>
+//     ))}
+//   </ul>
+// )
+
+function setValue(item, index, value, propHandler){
+  item.properties[index].propValue = value
+  propHandler(item.uid, index, value)
+}
+
+const PropertyTable = ({ item, propHandler }) => {
+  console.log(item);
+  return (
+    <Table>
+      <Table.Body>
+        {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
+          <Table.Row key={index2}>
+            <Table.Cell>{prop.propname}</Table.Cell>
+            <Table.Cell>
+              <input defaultValue={prop.count}  onChange={(e)=>{ setValue(item, index2, e.target.value, propHandler)}} />
+            </Table.Cell>
+            { prop.propType === 'Material'?
+              <Table.Cell><Select value={prop.propValue? prop.propValue: LIST[0].value} options={LIST} onChange={(e,data)=>{ setValue(item, index2, data.value, propHandler) }} ></Select></Table.Cell>:
+              <Table.Cell><input defaultValue={prop.propValue? prop.propValue: prop.default} onChange={(e,data)=>{ setValue(item, index2, data.value, propHandler) }}></input></Table.Cell>
+
+            }
+          </Table.Row>
+        ))}
+
+      </Table.Body>
+
+    </Table>
+  )
+}
+
+
 
 class Quote extends React.Component{
 
@@ -69,10 +153,41 @@ class Quote extends React.Component{
     const quote = update(this.state.quote, {
       items:{
         [uid]:{
-          [prop]:{$set:value}
+          [prop]:{$set:value},
+          properties:{$set: ( this.typesObject[value] ? this.typesObject[value].properties : [] ) }
         }
       }
     })
+
+
+
+    this.setState({quote})
+  }
+
+  handleEntryPropChange = (uid, index, value)=>{
+
+
+    let price = 0
+    for (let item of this.state.quote.items[uid].properties) {
+      let lookup = PRICETABLE[item.propValue]
+
+      if (! lookup) { continue }
+      var unitprice = Number(lookup.replace(/[^0-9.-]+/g,""));
+      console.log('handleentryprop', item, unitprice, parseFloat(item.count) );
+      if( unitprice && parseFloat(item.count) ){
+        price += unitprice * parseFloat(item.count)
+      }
+    }
+
+
+    let quote = update(this.state.quote, {
+      items:{
+        [uid]:{
+          price:{ $set: price},
+        }
+      }
+    })
+
     this.setState({quote})
   }
 
@@ -158,13 +273,21 @@ class Quote extends React.Component{
                     </Table.Cell>
                     <Table.Cell>
                       <ul>
-                        {Array.isArray(item.properties) && item.properties.map((prop)=>(
-                          <li>{prop}</li>
+                        {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
+                          <li key={index2}>{prop.propname}:{prop.propValue? prop.propValue : prop.default}</li>
                         ))}
                       </ul>
+                      <Modal
+                        trigger={<Button><Icon name='edit'/></Button>}
+                        header='Edit'
+                        content={ <PropertyTable item={item} propHandler={this.handleEntryPropChange}/> }
+                        actions={[{ key: 'cancel', content: 'Cancel', positive: false },{ key: 'done', content: 'Done', positive: true }]}
+                        basic
+                      />
+
                     </Table.Cell>
-                    <Table.Cell>price</Table.Cell>
-                    <Table.Cell>count * price</Table.Cell>
+                    <Table.Cell>{Math.round(item.price * 100)/100}</Table.Cell>
+                    <Table.Cell>{Math.round(item.count * item.price*100)/100}</Table.Cell>
                     <Table.Cell collapsing><Button icon onClick={()=>this.removeEntry(item.uid)}><Icon name='minus'/></Button></Table.Cell>
                   </Table.Row>
               ))}

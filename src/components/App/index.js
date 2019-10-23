@@ -18,6 +18,8 @@ import Quote from '../Quote';
 import AccountPage from '../Account';
 import AdminPage from '../Admin';
 import MillingStats from '../MillingStats.js';
+import TimeTrackingPage from '../TimeTrackingPage.js';
+import ResponseCode from '../ResponseCode.js';
 import * as ROUTES from '../../constants/routes';
 import { withFirebase } from '../Firebase';
 
@@ -39,6 +41,8 @@ const App = () => (
       />
       <Route path={ROUTES.HOME} component={HomePage} />
       <Route path={'/millingstats'} component={MillingStats} />
+      <Route path={'/timetracking'} component={TimeTrackingPage} />
+      <Route path={'/timetracking/:code'} component={ResponseCode} />
       <Route path={ROUTES.QUOTE} component={Quote} />
       <Route path={ROUTES.ACCOUNT} component={AccountPage} />
       <Route path={ROUTES.ADMIN} component={AdminPage} />

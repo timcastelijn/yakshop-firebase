@@ -113,6 +113,7 @@ class ComponentTypes extends React.Component{
                       <Table.Body>
                         {Array.isArray(value.properties) && value.properties.map((prop, i)=>(
                           <Table.Row key={i}>
+                            <Table.Cell><Input value={prop.count} onChange={(e)=>this.changeProp(key, i, 'count', e.target.value)}></Input></Table.Cell>
                             <Table.Cell><Input value={prop.propname} onChange={(e)=>this.changeProp(key, i, 'propname', e.target.value)}></Input></Table.Cell>
                             <Table.Cell><Input value={prop.propType} onChange={(e)=>this.changeProp(key, i, 'propType', e.target.value)}></Input></Table.Cell>
                             <Table.Cell><Input value={prop.default} onChange={(e)=>this.changeProp(key, i, 'default', e.target.value)}></Input></Table.Cell>
