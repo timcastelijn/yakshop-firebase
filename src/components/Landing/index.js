@@ -2,8 +2,9 @@ import React from 'react';
 import { compose } from 'recompose';
 
 import { withFirebase } from '../Firebase';
-import { withAuthorization } from '../Session';
 import { AuthUserContext } from '../Session';
+import { SignInPage } from '../SignIn'
+import { PasswordForgetLink } from '../PasswordForget';
 import * as ROUTES from '../../constants/routes';
 import * as ROLES from '../../constants/roles';
 import { Link, withRouter } from 'react-router-dom';
@@ -22,7 +23,7 @@ class Landing extends React.Component{
             this.props.history.push( '/home' );
           }else{
             return (
-              <h1>Landing</h1>
+              <SignInPage />
             )
           }
         }

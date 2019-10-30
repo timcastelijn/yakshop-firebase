@@ -9,7 +9,7 @@ import { AuthUserContext } from '../Session';
 import * as ROLES from '../../constants/roles';
 
 const menuStyle = {
-  margin:'5px' 
+  margin:'5px'
 }
 const Navigation = () => (
   <AuthUserContext.Consumer>
@@ -17,7 +17,7 @@ const Navigation = () => (
       authUser ? (
         <NavigationAuth authUser={authUser} />
       ):(
-        <NavigationNonAuth />
+        null
       )
     }
   </AuthUserContext.Consumer>
@@ -57,7 +57,7 @@ const NavigationNonAuth = () => {
         {/*<Menu.Item as={Link} to={ROUTES.LANDING} name='landing' active={activeItem === 'landing'}  />*/}
         <Menu.Menu position='right'>
 
-          <Menu.Item as={Link} to={ROUTES.SIGN_IN} name='sign in' active={activeItem === 'sign in'}  />
+          {/*<Menu.Item as={Link} to={ROUTES.SIGN_IN} name='sign in' active={activeItem === 'sign in'}  />*/}
         </Menu.Menu>
     </Menu>
   )

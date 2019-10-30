@@ -30,7 +30,6 @@ import { withAuthentication } from '../Session';
 const App = () => (
   <Router basename='/tnmoffice'>
     <Navigation/>
-    <hr />
 
     <Container>
       <Route exact path={ROUTES.LANDING} component={LandingPage} />
