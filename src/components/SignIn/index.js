@@ -35,7 +35,7 @@ class SignInFormBase extends Component {
       .doSignInWithEmailAndPassword(email, password)
       .then(() => {
         this.setState({ ...INITIAL_STATE });
-        this.props.history.push( '/millingstats' );
+        this.props.history.push( '/home' );
       })
       .catch(error => {
         this.setState({ error });

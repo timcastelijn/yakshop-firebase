@@ -14,6 +14,7 @@ import LandingPage from '../Landing';
 import SignInPage from '../SignIn';
 import PasswordForgetPage from '../PasswordForget';
 import HomePage from '../Home';
+import Quotes from '../Quotes';
 import Quote from '../Quote';
 import AccountPage from '../Account';
 import AdminPage from '../Admin';
@@ -27,11 +28,11 @@ import { withAuthentication } from '../Session';
 
 
 const App = () => (
-  <Router>
-    <Navigation />
+  <Router basename='/tnmoffice'>
+    <Navigation/>
+    <hr />
 
     <Container>
-      <hr />
       <Route exact path={ROUTES.LANDING} component={LandingPage} />
       {/*<Route path={ROUTES.SIGN_UP} component={SignUpPage} />*/}
       <Route path={ROUTES.SIGN_IN} component={SignInPage} />
@@ -40,6 +41,7 @@ const App = () => (
         component={PasswordForgetPage}
       />
       <Route path={ROUTES.HOME} component={HomePage} />
+      <Route path={'/quotes'} component={Quotes} />
       <Route path={'/millingstats'} component={MillingStats} />
       <Route path={'/timetracking'} component={TimeTrackingPage} />
       <Route path={'/timetracking/:code'} component={ResponseCode} />

@@ -57,7 +57,9 @@ export class PivotTable extends React.Component {
 
         this.state = {
           data:props.data,
-          modus:'minutes'
+          modus:'minutes',
+          vals:['duration [min]'],
+          aggregatorName:'Sum'
         };
 
     }

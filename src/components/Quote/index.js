@@ -35,9 +35,8 @@ async function getData(){
     PRICETABLE[item.id] = item['prijs/pt']
     LIST.push({key:item.id, value:item.id, text:item.name, data:item})
   }
-
-  console.log(PRICETABLE);
 }
+
 getData()
 
 class Block{
@@ -80,9 +79,8 @@ const PropertyTable = ({ item, propHandler }) => {
               <input defaultValue={prop.count}  onChange={(e)=>{ setValue(item, index2, e.target.value, propHandler)}} />
             </Table.Cell>
             { prop.propType === 'Material'?
-              <Table.Cell><Select value={prop.propValue? prop.propValue: LIST[0].value} options={LIST} onChange={(e,data)=>{ setValue(item, index2, data.value, propHandler) }} ></Select></Table.Cell>:
+              <Table.Cell><Select value={item.properties[index2].propValue? item.properties[index2].propValue: LIST[0].value} options={LIST} onChange={(e,data)=>{ setValue(item, index2, data.value, propHandler) }} ></Select></Table.Cell>:
               <Table.Cell><input defaultValue={prop.propValue? prop.propValue: prop.default} onChange={(e,data)=>{ setValue(item, index2, data.value, propHandler) }}></input></Table.Cell>
-
             }
           </Table.Row>
         ))}
@@ -150,18 +148,37 @@ class Quote extends React.Component{
   handleEntryChange = (uid, prop, value)=>{
 
     console.log(uid, prop, value);
-    const quote = update(this.state.quote, {
-      items:{
-        [uid]:{
-          [prop]:{$set:value},
-          properties:{$set: ( this.typesObject[value] ? this.typesObject[value].properties : [] ) }
+
+    if (prop == 'type') {
+      const quote = update(this.state.quote, {
+        items:{
+          [uid]:{
+            [prop]:{$set:value},
+            properties:{$set: ( this.typesObject[value] ? this.typesObject[value].properties : [] ) }
+          }
         }
-      }
-    })
+      })
+      this.updatePriceTotal(quote)
+
+      this.setState({quote})
+    }else{
+      const quote = update(this.state.quote, {
+        items:{
+          [uid]:{
+            [prop]:{$set:value}
+          }
+        }
+      })
+      console.log('qp', quote);
+
+      this.updatePriceTotal(quote)
+
+      this.setState({quote})
+    }
 
 
 
-    this.setState({quote})
+
   }
 
   handleEntryPropChange = (uid, index, value)=>{
@@ -180,6 +197,7 @@ class Quote extends React.Component{
     }
 
 
+
     let quote = update(this.state.quote, {
       items:{
         [uid]:{
@@ -188,7 +206,28 @@ class Quote extends React.Component{
       }
     })
 
+
+    this.updatePriceTotal(quote)
+
     this.setState({quote})
+
+  }
+
+  updatePriceTotal= (quote)=>{
+
+    console.log(quote);
+
+    if(!quote) console.log('somethin');return false;
+
+    quote.priceTotal = 0
+    console.log(quote.priceTotal);
+
+    for (let [k,item] of Object.entries(quote.items) ) {
+      if (parseFloat(item.price)) {
+        quote.priceTotal += item.count * parseFloat(item.price)
+      }
+    }
+
   }
 
   addEntry = ()=>{
@@ -196,7 +235,7 @@ class Quote extends React.Component{
     const quote = update(this.state.quote, {
       items:{
         [uid]:{
-          $set:{uid:uid, count:1, type:'none'}
+          $set:{uid:uid, count:1, type:'none', raiseFactor:1}
         }
       }
     })
@@ -210,8 +249,6 @@ class Quote extends React.Component{
     var newItems = cloneDeep(this.state.quote.items)
 
     delete newItems[uid]
-
-    console.log(newItems);
 
     const quote = update(this.state.quote, {
         items:{$set:newItems}
@@ -229,9 +266,7 @@ class Quote extends React.Component{
 
   render(){
     const {uid, isLoading, typeOptions} = this.state;
-    const {ownerName, items, dateCreated, projectName} = this.state.quote;
-
-    console.log(items);
+    const {ownerName, items, dateCreated, projectName, priceTotal} = this.state.quote;
 
     return(
       <div >
@@ -259,6 +294,7 @@ class Quote extends React.Component{
                 <Table.HeaderCell>type</Table.HeaderCell>
                 <Table.HeaderCell>properties</Table.HeaderCell>
                 <Table.HeaderCell>price</Table.HeaderCell>
+                <Table.HeaderCell>raise factor</Table.HeaderCell>
                 <Table.HeaderCell>subtotal</Table.HeaderCell>
                 <Table.HeaderCell></Table.HeaderCell>
               </Table.Row>
@@ -267,7 +303,7 @@ class Quote extends React.Component{
               {Object.entries(items).map(([k, item], index)=>(
                   <Table.Row key={index}>
                     <Table.Cell>{index}</Table.Cell>
-                    <Table.Cell collapsing><Input type='number' value={item.count} onChange={(e) => this.handleEntryChange(item.uid, 'count', e.target.value)}/></Table.Cell>
+                    <Table.Cell collapsing><Input style={{width:'70px'}}  type='number' value={item.count} onChange={(e) => this.handleEntryChange(item.uid, 'count', e.target.value)}/></Table.Cell>
                     <Table.Cell collapsing>
                       <Select placeholder='Select type' value={item.type} options={typeOptions} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>
                     </Table.Cell>
@@ -286,8 +322,9 @@ class Quote extends React.Component{
                       />
 
                     </Table.Cell>
-                    <Table.Cell>{Math.round(item.price * 100)/100}</Table.Cell>
-                    <Table.Cell>{Math.round(item.count * item.price*100)/100}</Table.Cell>
+                    <Table.Cell collapsing>{Math.round(item.price * 100)/100}</Table.Cell>
+                    <Table.Cell collapsing ><Input style={{width:'70px'}} type='number' step={'0.1'}value={item.raiseFactor} onChange={(e) => this.handleEntryChange(item.uid, 'raiseFactor', e.target.value)}/></Table.Cell>
+                    <Table.Cell collapsing>{Math.round(item.count * item.raiseFactor * item.price*100)/100}</Table.Cell>
                     <Table.Cell collapsing><Button icon onClick={()=>this.removeEntry(item.uid)}><Icon name='minus'/></Button></Table.Cell>
                   </Table.Row>
               ))}
@@ -296,6 +333,7 @@ class Quote extends React.Component{
               <Table.Row>
                 <Table.HeaderCell />
                 <Table.HeaderCell colSpan='5'/>
+                <Table.HeaderCell >{Math.round(priceTotal * 100)/100}</Table.HeaderCell >
                 <Table.HeaderCell >
                   <Button icon onClick = {this.addEntry}>
                     <Icon name='plus'/>
