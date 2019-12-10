@@ -39,7 +39,7 @@ const NavigationAuth = ({ authUser }) => {
 
     <Menu.Menu position='right'>
       <Menu.Item as={Link} to={ROUTES.ACCOUNT} name='account' active={activeItem === 'account'}  />
-        {!!(Object.keys(authUser.roles).length > 0 && authUser.roles.indexOf[ROLES.ADMIN]!=-1) && (
+        {authUser.roles  && authUser.roles.ADMIN && (
           <Menu.Item as={Link} to={ROUTES.ADMIN} name='admin' active={activeItem === 'admin'}  />
         )}
       <Menu.Item as={SignOutButton} name='logout' />

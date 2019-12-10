@@ -13,7 +13,7 @@ const SignInPage = () => (
     <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>
       <Grid.Column style={{ maxWidth: 450 }}>
         <Header as='h2' textAlign='center'>
-          <Image src='/logo_grey-zonder-tekst-100x100.png' /> Log-in to your account
+          <Image src='/logo_grey-zonder-tekst-100x100.png' /> SIGN IN
         </Header>
         <SignInForm />
         <PasswordForgetLink />

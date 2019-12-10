@@ -50,7 +50,14 @@ class Quotes extends React.Component{
 
   componentDidMount() {
     this.setState({ loading: true });
-    this.props.firebase.db.ref('quotes/').on('value', snapshot => {
+
+    console.log(this.props.firebase.auth);
+
+
+
+    this.props.firebase.db.ref('quotes/').orderByChild("owner")
+                                         .equalTo(this.authUser.uid)
+                                         .on("value", snapshot => {
       const quotesObject = snapshot.val();
 
       if (!quotesObject) { this.setState({loading: false}); return false; }
@@ -65,6 +72,7 @@ class Quotes extends React.Component{
         loading: false,
       });
     });
+
   }
 
 
@@ -76,7 +84,7 @@ class Quotes extends React.Component{
         owner:authUser.uid,
         ownerName:authUser.username,
         projectName:'',
-        items:[null],
+        items:[],
         dateCreated:date,
     });
 
@@ -98,6 +106,8 @@ class Quotes extends React.Component{
     return (
       <AuthUserContext.Consumer>
         {(authUser) => {
+            this.authUser = authUser;
+
             return (
               <div>
                 <h1>Quotes</h1>

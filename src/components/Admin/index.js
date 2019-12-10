@@ -73,7 +73,7 @@ const UserList = ({ users }) => (
             <strong>Username:</strong> {user.username}
           </Table.Cell>
           <Table.Cell>
-            { user.roles && user.roles.map((role, i)=>(
+            { user.roles && Object.entries(user.roles).map((role, i)=>(
                 <div key={i}>{role}</div>
               ))}
           </Table.Cell>
@@ -87,8 +87,7 @@ const UserList = ({ users }) => (
 
 const condition = (authUser) => {
 
-  console.log('condition', authUser, ROLES.ADMIN);
-  return authUser && !! (Object.keys(authUser.roles).length > 0 && authUser.roles.indexOf[ROLES.ADMIN] != -1) ;
+  return authUser && !! ( authUser.roles.ADMIN ) ;
 }
 
 

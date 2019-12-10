@@ -13,6 +13,7 @@ import {Divider, Form, Table, Button, Icon, Input, Container, Select} from 'sema
 import { Header, Modal } from 'semantic-ui-react'
 
 import GoogleApi from './GoogleApi.js'
+import SelectWithDataSource from './../SelectWithDataSource.js'
 
 
 const googleApi = new GoogleApi()
@@ -93,6 +94,7 @@ const PropertyTable = ({ item, propHandler }) => {
 
 
 
+
 class Quote extends React.Component{
 
   constructor(props){
@@ -119,11 +121,16 @@ class Quote extends React.Component{
 
     this.props.firebase.db.ref(`/quotes/${uid}`).once('value').then((snapshot) => {
       var quote = snapshot.val()  || null;
+
+      if(quote.items == null){
+        quote.items = []
+      }
       this.setState({
         uid:uid,
         quote:quote,
         isLoading:false,})
     });
+
 
     this.props.firebase.db.ref(`/componentTypes`).once('value').then((snapshot) => {
       this.typesObject = snapshot.val()  || {};
@@ -158,6 +165,7 @@ class Quote extends React.Component{
           }
         }
       })
+
       this.updatePriceTotal(quote)
 
       this.setState({quote})
@@ -209,20 +217,28 @@ class Quote extends React.Component{
 
     this.updatePriceTotal(quote)
 
+    console.log('priceTotal', quote);
+
     this.setState({quote})
 
   }
 
   updatePriceTotal= (quote)=>{
 
-    console.log(quote);
+    console.log('test');
 
-    if(!quote) console.log('somethin');return false;
+    if(!quote){
+      console.log('somethin');
+      return false
+    }
+
+    console.log('test2');
 
     quote.priceTotal = 0
     console.log(quote.priceTotal);
 
     for (let [k,item] of Object.entries(quote.items) ) {
+      console.log(k, item, item.price);
       if (parseFloat(item.price)) {
         quote.priceTotal += item.count * parseFloat(item.price)
       }
@@ -300,12 +316,13 @@ class Quote extends React.Component{
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {Object.entries(items).map(([k, item], index)=>(
+              {items && Object.entries(items).map(([k, item], index)=>(
                   <Table.Row key={index}>
                     <Table.Cell>{index}</Table.Cell>
                     <Table.Cell collapsing><Input style={{width:'70px'}}  type='number' value={item.count} onChange={(e) => this.handleEntryChange(item.uid, 'count', e.target.value)}/></Table.Cell>
                     <Table.Cell collapsing>
-                      <Select placeholder='Select type' value={item.type} options={typeOptions} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>
+                      <SelectWithDataSource placeholder='Select type' value={item.type} dataSource={'Firebase'} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>
+                      {/*<Select placeholder='Select type' value={item.type} options={typeOptions} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>*/}
                     </Table.Cell>
                     <Table.Cell>
                       <ul>
