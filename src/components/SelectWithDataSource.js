@@ -5,24 +5,24 @@ import update from 'immutability-helper';
 import cloneDeep from 'lodash/cloneDeep'
 
 import { withFirebase } from './Firebase';
-import { withAuthorization, AuthUserContext } from './Session';
+import { withAuthorization, AuthUserContext, hasRights } from './Session';
 
 import {Divider, Form, Table, Button, Icon, Input, Container, Select} from 'semantic-ui-react'
 import { Header, Modal } from 'semantic-ui-react'
 
-function hasRights(authUser, permissions){
-  if (authUser.roles) {
-    if (authUser.roles.ADMIN || authUser.roles.TNMUSER) {
-        return true
-    }else{
-      for (let [role, value] of Object.entries(authUser.roles) ) {
-        if(permissions[role]){
-          return true
-        }
-      }
-    }
-  }
-}
+// function hasRights(authUser, permissions){
+//   if (authUser.roles) {
+//     if (authUser.roles.ADMIN || authUser.roles.TNMUSER) {
+//         return true
+//     }else{
+//       for (let [role, value] of Object.entries(authUser.roles) ) {
+//         if(permissions[role]){
+//           return true
+//         }
+//       }
+//     }
+//   }
+// }
 
 
 const SelectWithDataSource = (props) => (
@@ -63,7 +63,8 @@ class SelectWithDataSourceAuth extends React.Component{
         const options =[]
         for (let [key, item]  of Object.entries(this.typesObject)) {
 
-          if( item.permissions && hasRights(this.props.authUser, item.permissions)){
+          if( hasRights(this.props.authUser, item.permissions)){
+            console.log(item.name);
             options.push({
               key:key,
               value:key,
@@ -95,7 +96,7 @@ class SelectWithDataSourceAuth extends React.Component{
     const {options, value} = this.state
 
     return(
-        <Select placeholder={placeholder} value={value} options={options} onChange={this.onChange}/>
+        <Select fluid placeholder={placeholder} value={value} options={options} onChange={this.onChange}/>
     )
   }
 }

@@ -6,8 +6,7 @@ import cloneDeep from 'lodash/cloneDeep'
 
 
 import { withFirebase } from '../Firebase';
-import { withAuthorization } from '../Session';
-import { AuthUserContext } from '../Session';
+import { withAuthorization, AuthUserContext, hasRights } from '../Session';
 
 import {Divider, Form, Table, Button, Icon, Input, Container, Select} from 'semantic-ui-react'
 import { Header, Modal } from 'semantic-ui-react'
@@ -165,7 +164,6 @@ class Quote extends React.Component{
           }
         }
       })
-
       this.updatePriceTotal(quote)
 
       this.setState({quote})
@@ -177,8 +175,6 @@ class Quote extends React.Component{
           }
         }
       })
-      console.log('qp', quote);
-
       this.updatePriceTotal(quote)
 
       this.setState({quote})
@@ -186,63 +182,55 @@ class Quote extends React.Component{
 
 
 
-
   }
 
   handleEntryPropChange = (uid, index, value)=>{
 
-
-    let price = 0
-    for (let item of this.state.quote.items[uid].properties) {
-      let lookup = PRICETABLE[item.propValue]
-
-      if (! lookup) { continue }
-      var unitprice = Number(lookup.replace(/[^0-9.-]+/g,""));
-      console.log('handleentryprop', item, unitprice, parseFloat(item.count) );
-      if( unitprice && parseFloat(item.count) ){
-        price += unitprice * parseFloat(item.count)
-      }
-    }
-
-
-
-    let quote = update(this.state.quote, {
-      items:{
-        [uid]:{
-          price:{ $set: price},
-        }
-      }
-    })
-
-
+    const quote = update(this.state.quote, {})
     this.updatePriceTotal(quote)
-
-    console.log('priceTotal', quote);
-
     this.setState({quote})
+
+
+    // console.log('priceTotal', quote);
+
 
   }
 
   updatePriceTotal= (quote)=>{
 
-    console.log('test');
 
-    if(!quote){
+    if(!this.state.quote){
       console.log('somethin');
       return false
     }
 
-    console.log('test2');
 
-    quote.priceTotal = 0
-    console.log(quote.priceTotal);
+    let priceTotal = 0
+
 
     for (let [k,item] of Object.entries(quote.items) ) {
-      console.log(k, item, item.price);
-      if (parseFloat(item.price)) {
-        quote.priceTotal += item.count * parseFloat(item.price)
+      let price = 0
+
+      // calc price for each prop
+      for (let prop of item.properties) {
+        let lookup = PRICETABLE[prop.propValue]
+
+        if (! lookup) { continue }
+        var unitprice = Number(lookup.replace(/[^0-9.-]+/g,""));
+        if( unitprice && parseFloat(prop.count) ){
+          price += unitprice * parseFloat(prop.count)
+        }
+      }
+      item.price = price
+
+      console.log(k, item, price);
+      if (parseFloat(price)) {
+        priceTotal += item.count * parseFloat(price)
       }
     }
+
+    quote.priceTotal = priceTotal
+
 
   }
 
@@ -251,7 +239,7 @@ class Quote extends React.Component{
     const quote = update(this.state.quote, {
       items:{
         [uid]:{
-          $set:{uid:uid, count:1, type:'none', raiseFactor:1}
+          $set:{uid:uid, count:1, type:'none', raiseFactor:1, price:0}
         }
       }
     })
@@ -285,90 +273,107 @@ class Quote extends React.Component{
     const {ownerName, items, dateCreated, projectName, priceTotal} = this.state.quote;
 
     return(
-      <div >
-        <h1>Quote</h1>
-        {isLoading?
-        <div>Loading...</div>:
-        <div>
-          <Form style={{maxWidth:'300px'}}>
-            <Form.Field>
-              <label>Project Name</label>
-              <input placeholder='project Name' value={projectName}  onChange={(event)=>{ this.handleChange('projectName', event.target.value) }} />
-            </Form.Field>
-          </Form>
-          <div>owner: {ownerName} </div>
-          <div>uid: {uid}</div>
-          <div>date created: {dateCreated}</div>
+      <AuthUserContext.Consumer>
+        {authUser =>
+          authUser ? (
+          <div >
 
-          <Divider hidden> </Divider>
+            <h1>Quote</h1>
+            {isLoading?
+            <div>Loading...</div>:
+            <div>
+              <Form style={{maxWidth:'300px'}}>
+                <Form.Field>
+                  <label>Project Name</label>
+                  <input placeholder='project Name' value={projectName}  onChange={(event)=>{ this.handleChange('projectName', event.target.value) }} />
+                </Form.Field>
+              </Form>
+              <div>owner: {ownerName} </div>
+              <div>roles: {JSON.stringify(authUser.roles)} </div>
 
-          <Table compact celled definition>
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell />
-                <Table.HeaderCell>count</Table.HeaderCell>
-                <Table.HeaderCell>type</Table.HeaderCell>
-                <Table.HeaderCell>properties</Table.HeaderCell>
-                <Table.HeaderCell>price</Table.HeaderCell>
-                <Table.HeaderCell>raise factor</Table.HeaderCell>
-                <Table.HeaderCell>subtotal</Table.HeaderCell>
-                <Table.HeaderCell></Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {items && Object.entries(items).map(([k, item], index)=>(
-                  <Table.Row key={index}>
-                    <Table.Cell>{index}</Table.Cell>
-                    <Table.Cell collapsing><Input style={{width:'70px'}}  type='number' value={item.count} onChange={(e) => this.handleEntryChange(item.uid, 'count', e.target.value)}/></Table.Cell>
-                    <Table.Cell collapsing>
-                      <SelectWithDataSource placeholder='Select type' value={item.type} dataSource={'Firebase'} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>
-                      {/*<Select placeholder='Select type' value={item.type} options={typeOptions} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>*/}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <ul>
-                        {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
-                          <li key={index2}>{prop.propname}:{prop.propValue? prop.propValue : prop.default}</li>
-                        ))}
-                      </ul>
-                      <Modal
-                        trigger={<Button><Icon name='edit'/></Button>}
-                        header='Edit'
-                        content={ <PropertyTable item={item} propHandler={this.handleEntryPropChange}/> }
-                        actions={[{ key: 'cancel', content: 'Cancel', positive: false },{ key: 'done', content: 'Done', positive: true }]}
-                        basic
-                      />
+              <div>uid: {uid}</div>
+              <div>date created: {dateCreated}</div>
 
-                    </Table.Cell>
-                    <Table.Cell collapsing>{Math.round(item.price * 100)/100}</Table.Cell>
-                    <Table.Cell collapsing ><Input style={{width:'70px'}} type='number' step={'0.1'}value={item.raiseFactor} onChange={(e) => this.handleEntryChange(item.uid, 'raiseFactor', e.target.value)}/></Table.Cell>
-                    <Table.Cell collapsing>{Math.round(item.count * item.raiseFactor * item.price*100)/100}</Table.Cell>
-                    <Table.Cell collapsing><Button icon onClick={()=>this.removeEntry(item.uid)}><Icon name='minus'/></Button></Table.Cell>
+              <Divider hidden> </Divider>
+
+              <Table compact celled definition>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.HeaderCell />
+                    <Table.HeaderCell>count</Table.HeaderCell>
+                    <Table.HeaderCell>type</Table.HeaderCell>
+                    <Table.HeaderCell>properties</Table.HeaderCell>
+                    <Table.HeaderCell>price</Table.HeaderCell>
+                    { hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
+                      <Table.HeaderCell>raise factor</Table.HeaderCell>:null
+                    }
+                    <Table.HeaderCell>subtotal</Table.HeaderCell>
+                    <Table.HeaderCell></Table.HeaderCell>
                   </Table.Row>
-              ))}
-            </Table.Body>
-            <Table.Footer>
-              <Table.Row>
-                <Table.HeaderCell />
-                <Table.HeaderCell colSpan='5'/>
-                <Table.HeaderCell >{Math.round(priceTotal * 100)/100}</Table.HeaderCell >
-                <Table.HeaderCell >
-                  <Button icon onClick = {this.addEntry}>
-                    <Icon name='plus'/>
-                  </Button>
-                </Table.HeaderCell>
-              </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                  {items && Object.entries(items).map(([k, item], index)=>(
+                      <Table.Row key={index}>
+                        <Table.Cell>{index}</Table.Cell>
+                        <Table.Cell collapsing><Input style={{width:'70px'}}  type='number' value={item.count} onChange={(e) => this.handleEntryChange(item.uid, 'count', e.target.value)}/></Table.Cell>
+                        <Table.Cell >
+                          <SelectWithDataSource placeholder='Select type' value={item.type} dataSource={'Firebase'} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>
+                          {/*<Select placeholder='Select type' value={item.type} options={typeOptions} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>*/}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <ul>
+                            {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
+                              <li key={index2}>{prop.propname}:{prop.propValue? prop.propValue : prop.default}</li>
+                            ))}
+                          </ul>
+                          <Modal
+                            trigger={<Button><Icon name='edit'/></Button>}
+                            header='Edit'
+                            content={ <PropertyTable item={item} propHandler={this.handleEntryPropChange}/> }
+                            actions={[{ key: 'cancel', content: 'Cancel', positive: false },{ key: 'done', content: 'Done', positive: true }]}
+                            basic
+                          />
 
-            </Table.Footer>
+                        </Table.Cell>
+                        <Table.Cell collapsing>{Math.round(item.price * 100)/100}</Table.Cell>
+                        { hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
+                            <Table.Cell collapsing ><Input style={{width:'70px'}} type='number' step={'0.1'}value={item.raiseFactor} onChange={(e) => this.handleEntryChange(item.uid, 'raiseFactor', e.target.value)}/></Table.Cell>
+                            :null
+                        }
+                      <Table.Cell collapsing>{Math.round(item.count * item.raiseFactor * item.price*100)/100}</Table.Cell>
+                        <Table.Cell collapsing><Button icon onClick={()=>this.removeEntry(item.uid)}><Icon name='minus'/></Button></Table.Cell>
+                      </Table.Row>
+                  ))}
+                </Table.Body>
+                <Table.Footer>
+                  <Table.Row>
+                    <Table.HeaderCell />
+                    <Table.HeaderCell colSpan='4'/>
+                      { hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
+                          <Table.HeaderCell />:null
+                      }
+                    <Table.HeaderCell >{Math.round(priceTotal * 100)/100}</Table.HeaderCell >
+                    <Table.HeaderCell >
+                      <Button icon onClick = {this.addEntry}>
+                        <Icon name='plus'/>
+                      </Button>
+                    </Table.HeaderCell>
+                  </Table.Row>
 
-          </Table>
-          <Divider hidden></Divider>
-          <Container>
-            <Button onClick={this.storeQuote}>Save</Button>
-          </Container>
-          <Divider hidden></Divider>
-        </div>
-      }
-      </div>
+                </Table.Footer>
+
+              </Table>
+              <Divider hidden></Divider>
+              <Container>
+                <Button onClick={this.storeQuote}>Save</Button>
+              </Container>
+              <Divider hidden></Divider>
+            </div>
+          }
+        </div>)
+        :null}
+      </AuthUserContext.Consumer>
+
     )
   }
 }
