@@ -193,6 +193,7 @@ class Quote extends React.Component{
 
   }
 
+
   handleEntryPropChange = (uid, index, value)=>{
 
     console.log('updateprop', this.state.quote.items[uid].properties[index].propname, value);

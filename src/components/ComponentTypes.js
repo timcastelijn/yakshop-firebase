@@ -259,7 +259,7 @@ class ComponentTypes extends React.Component{
                               <Table.Cell ><Input fluid value={prop.propname} onChange={(e)=>this.changeProp(key, i, 'propname', e.target.value)}></Input></Table.Cell>
                               <Table.Cell ><Input fluid value={prop.propType} onChange={(e)=>this.changeProp(key, i, 'propType', e.target.value)}></Input></Table.Cell>
                               <Table.Cell ><Input fluid value={prop.default} onChange={(e)=>this.changeProp(key, i, 'default', e.target.value)}></Input></Table.Cell>
-                              <Table.Cell collapsing><Checkbox checked={prop.permissions? (prop.permissions.TNMOOSTUSER === 'true' || prop.permissions.TNMOOSTUSER === 'true') : false} onChange={(e, {checked})=>this.setPropPermission(key, i, 'permissions', "TNMOOSTUSER", checked)}/></Table.Cell>
+                              <Table.Cell collapsing><Checkbox checked={prop.permissions? (prop.permissions.TNMOOSTUSER === 'true' || prop.permissions.TNMOOSTUSER === true) : false} onChange={(e, {checked})=>this.setPropPermission(key, i, 'permissions', "TNMOOSTUSER", checked)}/></Table.Cell>
                               {/*<Table.Cell collapsing><Input value={prop.accessLevel} onChange={(e)=>this.changeProp(key, i, 'accessLevel', e.target.value)}></Input></Table.Cell>*/}
                             </Table.Row>
                           ))}
