@@ -31,6 +31,7 @@ class PermissionTable extends React.Component{
 
     if (!this.state.value.permissions) {
       this.state.value.permissions = {}
+      this.props.value.permissions = {}
     }
 
     let value = update(this.state.value, {
@@ -155,6 +156,34 @@ class ComponentTypes extends React.Component{
     this.setState({typesObject})
   }
 
+  setPropPermission(uid, index, name, groupid, value){
+
+    if(!this.state.typesObject[uid].properties[index][name]){
+      this.state.typesObject[uid].properties[index][name] = {}
+    }
+
+    const typesObject = update(this.state.typesObject, {
+      [uid]:{
+        properties:{
+          [index]:{
+            [name]:{
+              [groupid]:{$set:value}}
+          }
+        }
+      }
+    })
+    this.setState({typesObject})
+  }
+
+  removeProp(uid, i){
+    const typesObject = update(this.state.typesObject, {
+      [uid]:{
+        properties:{$splice:[[i,1]]}
+      }
+    })
+    this.setState({typesObject})
+  }
+
   addProp(uid){
     const typesObject = update(this.state.typesObject, {
       [uid]:{
@@ -182,7 +211,7 @@ class ComponentTypes extends React.Component{
         {isLoading?
         <div>Loading...</div>:
         <div>
-          <Table>
+          <Table >
             <Table.Header>
               <Table.Row>
 
@@ -219,22 +248,27 @@ class ComponentTypes extends React.Component{
                     <PropTable object={value.properties}/>
                   </Table.Cell>*/}
                   <Table.Cell collapsing>
-                    <Table>
-                      <Table.Body>
-                        {Array.isArray(value.properties) && value.properties.map((prop, i)=>(
-                          <Table.Row key={i}>
-                            <Table.Cell collapsing><Input value={prop.count} onChange={(e)=>this.changeProp(key, i, 'count', e.target.value)}></Input></Table.Cell>
-                            <Table.Cell collapsing><Input value={prop.propname} onChange={(e)=>this.changeProp(key, i, 'propname', e.target.value)}></Input></Table.Cell>
-                            <Table.Cell collapsing><Input value={prop.propType} onChange={(e)=>this.changeProp(key, i, 'propType', e.target.value)}></Input></Table.Cell>
-                            <Table.Cell collapsing><Input value={prop.default} onChange={(e)=>this.changeProp(key, i, 'default', e.target.value)}></Input></Table.Cell>
-                            <Table.Cell collapsing><Input value={prop.accessLevel} onChange={(e)=>this.changeProp(key, i, 'accessLevel', e.target.value)}></Input></Table.Cell>
+                    <Container style={{'width':'800px', 'overflowX':'hidden', 'margin':'10px !important'}}>
+
+                      <Table >
+                        <Table.Body>
+                          {Array.isArray(value.properties) && value.properties.map((prop, i)=>(
+                            <Table.Row key={i}>
+                              <Table.Cell collapsing><Button onClick={(e)=>this.removeProp(key, i)}><Icon name='minus'/></Button></Table.Cell>
+                              <Table.Cell ><Input fluid type='number' value={prop.count} onChange={(e)=>this.changeProp(key, i, 'count', e.target.value)}></Input></Table.Cell>
+                              <Table.Cell ><Input fluid value={prop.propname} onChange={(e)=>this.changeProp(key, i, 'propname', e.target.value)}></Input></Table.Cell>
+                              <Table.Cell ><Input fluid value={prop.propType} onChange={(e)=>this.changeProp(key, i, 'propType', e.target.value)}></Input></Table.Cell>
+                              <Table.Cell ><Input fluid value={prop.default} onChange={(e)=>this.changeProp(key, i, 'default', e.target.value)}></Input></Table.Cell>
+                              <Table.Cell collapsing><Checkbox checked={prop.permissions? (prop.permissions.TNMOOSTUSER === 'true' || prop.permissions.TNMOOSTUSER === 'true') : false} onChange={(e, {checked})=>this.setPropPermission(key, i, 'permissions', "TNMOOSTUSER", checked)}/></Table.Cell>
+                              {/*<Table.Cell collapsing><Input value={prop.accessLevel} onChange={(e)=>this.changeProp(key, i, 'accessLevel', e.target.value)}></Input></Table.Cell>*/}
+                            </Table.Row>
+                          ))}
+                          <Table.Row>
+                            <Table.Cell><Button onClick={(e)=>this.addProp(key)}><Icon name='plus'/></Button></Table.Cell>
                           </Table.Row>
-                        ))}
-                        <Table.Row>
-                          <Table.Cell><Button onClick={(e)=>this.addProp(key)}><Icon name='plus'/></Button></Table.Cell>
-                        </Table.Row>
-                      </Table.Body>
-                    </Table>
+                        </Table.Body>
+                      </Table>
+                    </Container>
                   </Table.Cell>
                 </Table.Row>
               ))}

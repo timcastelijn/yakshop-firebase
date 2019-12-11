@@ -12,6 +12,11 @@ import { withFirebase } from './Firebase';
 import { withAuthorization } from './Session';
 import { AuthUserContext } from './Session';
 
+function setValue(item, index, value, propHandler){
+  item.properties[index].propValue = value
+  propHandler(item.uid, index, value)
+}
+
 
 
 const getTypeString = (val)=>{
@@ -111,39 +116,34 @@ class PropTable extends React.Component{
                   </li>
               ))}
             </ul>
+            <Modal
+              trigger={<Button><Icon name='edit'/></Button>}
+              header='Edit'
+              content={
 
-            <Modal trigger={ <Button> Long Modal </Button> } >
-              <Modal.Header>Profile Picture</Modal.Header>
-              {/*<Modal.Content image>*/}
-                {/*<Image wrapped size='medium' src='https://react.semantic-ui.com/images/wireframe/image.png' />*/}
-              <Modal.Content>
-                <Modal.Description>
-                  <Header>Modal Header</Header>
-                  <Table>
-                    <Table.Body>
-                    {Object.entries(this.state.object).map(([k, item], index)=>(
-                        <Table.Row key={index}>
-                          <Table.Cell>
-                            <Input value={k}  />
-                          </Table.Cell>
-                          {createCells( item )}
-                        </Table.Row>
-                    ))}
+                <Table>
+                  <Table.Body>
+                  {Object.entries(this.state.object).map(([k, item], index)=>(
+                      {/*<Table.Row key={index}>
+                        <Table.Cell>
+                          <Input value={k}  />
+                        </Table.Cell>
+                        {createCells( item )}
+                      </Table.Row>*/}
+                  ))}
 
-                    </Table.Body>
-                  </Table>
-                  <Button floated='right' icon onClick = {this.addProp}>
-                    <Icon name='plus'/>
-                  </Button>
-                </Modal.Description>
+                  </Table.Body>
+                  <Table.footer>
+                    <Button floated='right' icon onClick = {this.addProp}>
+                      <Icon name='plus'/>
+                    </Button>
+                  </Table.footer>
+                </Table>
 
-              </Modal.Content>
-              <Modal.Actions>
-                <Button primary>
-                  Proceed <Icon name='right chevron' />
-                </Button>
-              </Modal.Actions>
-            </Modal>
+              }
+              actions={[{ key: 'cancel', content: 'Cancel', positive: false },{ key: 'done', content: 'Done', positive: true }]}
+              basic
+            />
           </div>:null
         }
       </div>

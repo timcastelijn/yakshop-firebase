@@ -5,10 +5,10 @@ import * as moment from 'moment'
 import uuid from 'uuidv4';
 
 import { withFirebase } from './Firebase';
-import { withAuthorization } from './Session';
-import { AuthUserContext } from './Session';
+import { withAuthorization, AuthUserContext, hasRights} from './Session';
 
 import {Button, Table, Icon, Confirm} from 'semantic-ui-react'
+
 
 
 class ConfirmExampleConfirm extends React.Component {
@@ -51,24 +51,30 @@ class Quotes extends React.Component{
   componentDidMount() {
     this.setState({ loading: true });
 
-    console.log(this.props.firebase.auth);
 
+    // this.props.firebase.db.ref('quotes/').orderByChild("owner")
+    //                                      .equalTo(this.authUser.uid)
+    //                                      .on("value", snapshot => {
+    this.props.firebase.db.ref('quotes/').orderByChild("timeStamp").on("value", snapshot => {
 
-
-    this.props.firebase.db.ref('quotes/').orderByChild("owner")
-                                         .equalTo(this.authUser.uid)
-                                         .on("value", snapshot => {
       const quotesObject = snapshot.val();
 
       if (!quotesObject) { this.setState({loading: false}); return false; }
 
-      const usersList = Object.keys(quotesObject).map(key => ({
-        ...quotesObject[key],
-        uid: key,
-      }));
+      let quotesList = []
+      for (let[key, item] of Object.entries(quotesObject)) {
+        if (hasRights(this.authUser, {"TNMUSER":true})|| item.owner === this.authUser.uid ) {
+          quotesList.push( {...item, uid:key})
+        }
+      }
+
+      // const usersList = Object.keys(quotesObject).map(key => ({
+      //   ...quotesObject[key],
+      //   uid: key,
+      // }));
 
       this.setState({
-        quotes: usersList,
+        quotes: quotesList,
         loading: false,
       });
     });
@@ -79,6 +85,7 @@ class Quotes extends React.Component{
   onAddQuote(authUser){
 
     var date = moment().format()
+    var timeStamp = moment().unix()
 
     this.props.firebase.db.ref('quotes/' + uuid() ).set({
         owner:authUser.uid,
@@ -86,6 +93,7 @@ class Quotes extends React.Component{
         projectName:'',
         items:[],
         dateCreated:date,
+        timeStamp:timeStamp,
     });
 
   }
@@ -133,6 +141,9 @@ class Quotes extends React.Component{
                               <strong>itemCount:</strong> {quote.itemCount}
                             </Table.Cell>
                             <Table.Cell>
+                              <strong>price:</strong> { quote.priceTotal? (Math.round(quote.priceTotal * 100)/100):'-'}
+                            </Table.Cell>
+                            <Table.Cell>
                               <strong>date:</strong> {quote.dateCreated}
                             </Table.Cell>
                             <Table.Cell collapsing>
@@ -163,7 +174,6 @@ class Quotes extends React.Component{
 
 
 const condition = authUser => !!authUser;
-// export default withAuthorization(condition)(HomePage);
 
 export default compose(
   withAuthorization(condition),

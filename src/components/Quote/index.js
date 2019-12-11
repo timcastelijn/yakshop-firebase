@@ -8,12 +8,14 @@ import cloneDeep from 'lodash/cloneDeep'
 import { withFirebase } from '../Firebase';
 import { withAuthorization, AuthUserContext, hasRights } from '../Session';
 
-import {Divider, Form, Table, Button, Icon, Input, Container, Select} from 'semantic-ui-react'
+import {Divider, Form, Table, Button, Checkbox, Icon, Input, Container, Select} from 'semantic-ui-react'
 import { Header, Modal } from 'semantic-ui-react'
 
 import GoogleApi from './GoogleApi.js'
 import SelectWithDataSource from './../SelectWithDataSource.js'
 
+import PropTable from '../PropTable.js'
+import PropEditor from '../PropEditor.js'
 
 const googleApi = new GoogleApi()
 const LIST = []
@@ -156,11 +158,18 @@ class Quote extends React.Component{
     console.log(uid, prop, value);
 
     if (prop == 'type') {
+
+      const propObject = this.typesObject[value] ? this.typesObject[value].properties : []
+
+      for (let prop of propObject) {
+        prop.propValue = prop.default
+      }
+
       const quote = update(this.state.quote, {
         items:{
           [uid]:{
             [prop]:{$set:value},
-            properties:{$set: ( this.typesObject[value] ? this.typesObject[value].properties : [] ) }
+            properties:{$set: propObject }
           }
         }
       })
@@ -186,7 +195,12 @@ class Quote extends React.Component{
 
   handleEntryPropChange = (uid, index, value)=>{
 
+    console.log('updateprop', this.state.quote.items[uid].properties[index].propname, value);
+
+
     const quote = update(this.state.quote, {})
+
+
     this.updatePriceTotal(quote)
     this.setState({quote})
 
@@ -212,18 +226,28 @@ class Quote extends React.Component{
       let price = 0
 
       // calc price for each prop
-      for (let prop of item.properties) {
-        let lookup = PRICETABLE[prop.propValue]
+      if (!item.properties) { continue }
 
-        if (! lookup) { continue }
-        var unitprice = Number(lookup.replace(/[^0-9.-]+/g,""));
-        if( unitprice && parseFloat(prop.count) ){
-          price += unitprice * parseFloat(prop.count)
+      for (let prop of item.properties ) {
+
+        if (prop.propName === 'priceOverride'){
+          price = parseFloat(prop.default)
+          alert(price)
+        }else{
+          let lookup = PRICETABLE[prop.propValue]
+
+          if (! lookup) { continue }
+          var unitprice = Number(lookup.replace(/[^0-9.-]+/g,""));
+          if( unitprice && parseFloat(prop.count) ){
+            price += unitprice * parseFloat(prop.count)
+          }
         }
+
+
       }
       item.price = price
 
-      console.log(k, item, price);
+      // console.log(k, item, price);
       if (parseFloat(price)) {
         priceTotal += item.count * parseFloat(price)
       }
@@ -296,10 +320,14 @@ class Quote extends React.Component{
 
               <Divider hidden> </Divider>
 
+              <Select placeholder='Bulk actions' disabled options={[{key:'edit properties', text:'edit properties', value:'edit properties'}]}/>
+              <Divider hidden> </Divider>
+
               <Table compact celled definition>
                 <Table.Header>
                   <Table.Row>
                     <Table.HeaderCell />
+                    <Table.HeaderCell><Checkbox /></Table.HeaderCell>
                     <Table.HeaderCell>count</Table.HeaderCell>
                     <Table.HeaderCell>type</Table.HeaderCell>
                     <Table.HeaderCell>properties</Table.HeaderCell>
@@ -315,12 +343,14 @@ class Quote extends React.Component{
                   {items && Object.entries(items).map(([k, item], index)=>(
                       <Table.Row key={index}>
                         <Table.Cell>{index}</Table.Cell>
+                        <Table.Cell><Checkbox /></Table.Cell>
                         <Table.Cell collapsing><Input style={{width:'70px'}}  type='number' value={item.count} onChange={(e) => this.handleEntryChange(item.uid, 'count', e.target.value)}/></Table.Cell>
                         <Table.Cell >
                           <SelectWithDataSource placeholder='Select type' value={item.type} dataSource={'Firebase'} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>
                           {/*<Select placeholder='Select type' value={item.type} options={typeOptions} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>*/}
                         </Table.Cell>
                         <Table.Cell>
+                          <PropEditor showtable object={item.properties} propHandler={this.handleEntryPropChange}/>
                           <ul>
                             {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
                               <li key={index2}>{prop.propname}:{prop.propValue? prop.propValue : prop.default}</li>

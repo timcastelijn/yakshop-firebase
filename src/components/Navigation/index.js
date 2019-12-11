@@ -34,7 +34,9 @@ const NavigationAuth = ({ authUser }) => {
     {/*<Menu.Item as={Link} to={ROUTES.LANDING} name='landing' active={activeItem === 'landing'}  />*/}
     <Menu.Item as={Link} to={ROUTES.HOME} name='home' active={activeItem === 'home'}  />
     <Menu.Item as={Link} to={'/quotes'} name='quotes' active={activeItem === 'quotes'}  />
-    <Menu.Item as={Link} to={'/millingstats'} name='millingstats' active={activeItem === 'millingstats'}  />
+    {authUser.roles  && (authUser.roles.ADMIN ||  authUser.roles.TNMUSER) && (
+      <Menu.Item as={Link} to={'/millingstats'} name='millingstats' active={activeItem === 'millingstats'}  />
+    )}
     {/*<Menu.Item as={Link} to={'/timetracking'} name='timetracking' active={activeItem === 'millingstats'}  />*/}
 
     <Menu.Menu position='right'>

@@ -11,5 +11,10 @@ const MillingStats = () => (
   </div>
 );
 
-const condition = authUser => !!authUser;
+
+const condition = (authUser) => {
+
+  return authUser && !! ( authUser.roles.ADMIN || authUser.roles.TNMUSER) ;
+}
+
 export default withAuthorization(condition)(MillingStats);
