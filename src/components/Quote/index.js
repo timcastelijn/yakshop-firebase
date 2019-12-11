@@ -56,42 +56,13 @@ class Block{
   }
 }
 
-// const PropertyTable = ({item})=>(
-//   <ul>
-//     {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
-//       <li key={index2}>{prop.propname}:{prop.default}</li>
-//     ))}
-//   </ul>
-// )
+
 
 function setValue(item, index, value, propHandler){
   item.properties[index].propValue = value
   propHandler(item.uid, index, value)
 }
 
-const PropertyTable = ({ item, propHandler }) => {
-  console.log(item);
-  return (
-    <Table>
-      <Table.Body>
-        {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
-          <Table.Row key={index2}>
-            <Table.Cell>{prop.propname}</Table.Cell>
-            <Table.Cell>
-              <input defaultValue={prop.count}  onChange={(e)=>{ setValue(item, index2, e.target.value, propHandler)}} />
-            </Table.Cell>
-            { prop.propType === 'Material'?
-              <Table.Cell><Select value={item.properties[index2].propValue? item.properties[index2].propValue: LIST[0].value} options={LIST} onChange={(e,data)=>{ setValue(item, index2, data.value, propHandler) }} ></Select></Table.Cell>:
-              <Table.Cell><input defaultValue={prop.propValue? prop.propValue: prop.default} onChange={(e,data)=>{ setValue(item, index2, data.value, propHandler) }}></input></Table.Cell>
-            }
-          </Table.Row>
-        ))}
-
-      </Table.Body>
-
-    </Table>
-  )
-}
 
 
 
@@ -160,6 +131,7 @@ class Quote extends React.Component{
     if (prop == 'type') {
 
       const propObject = this.typesObject[value] ? this.typesObject[value].properties : []
+      const image = this.typesObject[value] && this.typesObject[value].image ? this.typesObject[value].image : ''
 
       for (let prop of propObject) {
         prop.propValue = prop.default
@@ -169,6 +141,7 @@ class Quote extends React.Component{
         items:{
           [uid]:{
             [prop]:{$set:value},
+            image:{$set:image},
             properties:{$set: propObject }
           }
         }
@@ -188,15 +161,11 @@ class Quote extends React.Component{
 
       this.setState({quote})
     }
-
-
-
   }
 
 
-  handleEntryPropChange = (uid, index, value)=>{
+  handleEntryPropChange = ()=>{
 
-    console.log('updateprop', this.state.quote.items[uid].properties[index].propname, value);
 
 
     const quote = update(this.state.quote, {})
@@ -231,18 +200,20 @@ class Quote extends React.Component{
 
       for (let prop of item.properties ) {
 
-        if (prop.propName === 'priceOverride'){
-          price = parseFloat(prop.default)
-          alert(price)
-        }else{
-          let lookup = PRICETABLE[prop.propValue]
-
-          if (! lookup) { continue }
-          var unitprice = Number(lookup.replace(/[^0-9.-]+/g,""));
-          if( unitprice && parseFloat(prop.count) ){
-            price += unitprice * parseFloat(prop.count)
+        if (prop.unitprice){
+          if(prop.propValue === 'true' || prop.propValue === true){
+            price += parseFloat(prop.unitprice)
           }
         }
+
+        let lookup = PRICETABLE[prop.propValue]
+
+        if (! lookup) { continue }
+        var unitprice = Number(lookup.replace(/[^0-9.-]+/g,""));
+        if( unitprice && parseFloat(prop.count) ){
+          price += unitprice * parseFloat(prop.count)
+        }
+
 
 
       }
@@ -308,17 +279,29 @@ class Quote extends React.Component{
             <div>Loading...</div>:
             <div>
               <Form style={{maxWidth:'300px'}}>
-                <Form.Field>
+                <Form.Field inline>
                   <label>Project Name</label>
                   <input placeholder='project Name' value={projectName}  onChange={(event)=>{ this.handleChange('projectName', event.target.value) }} />
                 </Form.Field>
               </Form>
               <div>owner: {ownerName} </div>
-              <div>roles: {JSON.stringify(authUser.roles)} </div>
+              <Divider hidden> </Divider>
+              {/*<div>roles: {JSON.stringify(authUser.roles)} </div>*/}
 
               <div>uid: {uid}</div>
               <div>date created: {dateCreated}</div>
 
+              <Divider hidden> </Divider>
+                <Form>
+                  <Form.Field inline>
+                    <label>Materiaal Fronten</label>
+                    <Select value={0} options={LIST} onChange={(e, {value})=>{ console.log('ja zeetie')} } />
+                  </Form.Field>
+                  <Form.Field inline>
+                    <label>Materiaal Blad</label>
+                    <Select value={0} options={LIST} onChange={(e, {value})=>{ console.log('ja zeetie')} } />
+                  </Form.Field>
+                </Form>
               <Divider hidden> </Divider>
 
               <Select placeholder='Bulk actions' disabled options={[{key:'edit properties', text:'edit properties', value:'edit properties'}]}/>
@@ -330,6 +313,7 @@ class Quote extends React.Component{
                     <Table.HeaderCell />
                     <Table.HeaderCell><Checkbox /></Table.HeaderCell>
                     <Table.HeaderCell>count</Table.HeaderCell>
+                    <Table.HeaderCell>image</Table.HeaderCell>
                     <Table.HeaderCell>type</Table.HeaderCell>
                     <Table.HeaderCell>properties</Table.HeaderCell>
                     <Table.HeaderCell>price</Table.HeaderCell>
@@ -346,25 +330,15 @@ class Quote extends React.Component{
                         <Table.Cell>{index}</Table.Cell>
                         <Table.Cell><Checkbox /></Table.Cell>
                         <Table.Cell collapsing><Input style={{width:'70px'}}  type='number' value={item.count} onChange={(e) => this.handleEntryChange(item.uid, 'count', e.target.value)}/></Table.Cell>
+                        <Table.Cell>
+                          <img style={{'width':'200px'}}src={item.image}></img>
+                        </Table.Cell>
                         <Table.Cell >
                           <SelectWithDataSource placeholder='Select type' value={item.type} dataSource={'Firebase'} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>
                           {/*<Select placeholder='Select type' value={item.type} options={typeOptions} onChange={(e, data) => this.handleEntryChange(item.uid, 'type', data.value)}/>*/}
                         </Table.Cell>
                         <Table.Cell>
                           <PropEditor showtable object={item.properties} propHandler={this.handleEntryPropChange}/>
-                          {/*<ul>
-                            {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
-                              <li key={index2}>{prop.propname}:{prop.propValue? prop.propValue : prop.default}</li>
-                            ))}
-                          </ul>
-                          <Modal
-                            trigger={<Button><Icon name='edit'/></Button>}
-                            header='Edit'
-                            content={ <PropertyTable item={item} propHandler={this.handleEntryPropChange}/> }
-                            actions={[{ key: 'cancel', content: 'Cancel', positive: false },{ key: 'done', content: 'Done', positive: true }]}
-                            basic
-                          />*/}
-
                         </Table.Cell>
                         <Table.Cell collapsing>{Math.round(item.price * 100)/100}</Table.Cell>
                         { hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
@@ -379,7 +353,7 @@ class Quote extends React.Component{
                 <Table.Footer>
                   <Table.Row>
                     <Table.HeaderCell />
-                    <Table.HeaderCell colSpan='4'/>
+                    <Table.HeaderCell colSpan='6'/>
                       { hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
                           <Table.HeaderCell />:null
                       }

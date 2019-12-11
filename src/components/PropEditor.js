@@ -9,7 +9,7 @@ import {  Header, Image, Modal } from 'semantic-ui-react'
 
 
 import { withFirebase } from './Firebase';
-import { withAuthorization, AuthUserContext } from './Session';
+import { withAuthorization, AuthUserContext, hasRights } from './Session';
 
 import GoogleApi from './Quote/GoogleApi.js'
 const googleApi = new GoogleApi()
@@ -80,6 +80,11 @@ class TypedInput extends React.Component{
       case 'Boolean':
         return(
           <Checkbox checked={ (value === 'true') || (value === true) } onChange={(e, {checked})=>{ this.setValue(prop, checked, updateFunc) } }/>
+        )
+        break;
+      case 'Number':
+        return(
+          <Input type='number' value={value} onChange={(e, {value})=>{ this.setValue(prop, value, updateFunc)} }/>
         )
         break;
       default:
@@ -191,14 +196,19 @@ class PropTable extends React.Component{
       <Container>
         <Table>
           <Table.Body>
-            {Object.entries(object).map(([k,v])=>(
-              <Table.Row key={k}>
-                  <Table.Cell>
-                    {v.propname}
-                  </Table.Cell>
-                  {createCells(v, this.props.updateFunc)}
-              </Table.Row>
-            ))}
+            {Object.entries(object).map(([k,v])=>
+              ( hasRights( this.props.authUser, v.permissions)?
+                <Table.Row key={k}>
+                    <Table.Cell>
+                      {v.propname}
+                    </Table.Cell>
+                    {createCells(v, this.props.updateFunc)}
+                </Table.Row>
+                :
+                null
+              )
+
+            )}
           </Table.Body>
         </Table>
       </Container>
@@ -223,33 +233,48 @@ class PropEditor extends React.Component{
   }
 
   render(){
-    const {onChange} = this.state
 
     return(
-      <div>
-        { this.props.object?
-          <div>
-            {
-              this.props.showtable?
-              <ul>
-                {Object.entries(this.state.object).map(([k, item], index)=>(
-                    <li key={index}>
-                      {item.propname}: {item.propValue !== undefined? JSON.stringify(item.propValue): <span style={{'color':'grey', 'fontStyle': 'oblique'}}>{item.default}</span>}
-                    </li>
-                ))}
-              </ul>:null
-            }
-            <Modal
-              trigger={<Button><Icon name='edit'/></Button>}
-              header='Edit'
-              content={ <PropTable object={this.props.object} updateFunc={this.updateDisplay}/> }
-              actions={[{ key: 'cancel', content: 'Cancel', positive: false },{ key: 'done', content: 'Done', positive: true }]}
-            />
+      <AuthUserContext.Consumer>
+        { authUser =>
+          authUser? (
+            <div>
+              { this.props.object?
+                <div>
+                  {
+                    this.props.showtable?
+                    <ul>
+                      {Object.entries(this.props.object).map(([k, item], index)=>{
+                        if (hasRights(authUser, item.permissions)) {
+                          return (
+                              <li key={index}>
+                                  {item.propname}: {item.propValue !== undefined? JSON.stringify(item.propValue): <span style={{'color':'grey', 'fontStyle': 'oblique'}}>{item.default}</span>}
+                              </li>:null
+                            )
+                        }
+                      }
 
 
-          </div>:null
+
+                      )}
+                    </ul>:null
+                  }
+                  <Modal
+                    trigger={<Button><Icon name='edit'/></Button>}
+                    header='Edit'
+                    content={ <PropTable object={this.props.object} authUser={authUser} updateFunc={this.props.propHandler}/> }
+                    actions={[{ key: 'cancel', content: 'Cancel', positive: false },{ key: 'done', content: 'Done', positive: true }]}
+                  />
+
+
+                </div>:null
+              }
+            </div>
+          ):null
+
         }
-      </div>
+      </AuthUserContext.Consumer>
+
     )
   }
 }

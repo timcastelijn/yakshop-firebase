@@ -9,7 +9,6 @@ export function hasRights(authUser, permissions){
         for (let [userRole, userRoleValue] of Object.entries(authUser.roles)) {
 
           if (userRole === permission && userRoleValue === true && permissionvalue === true) {
-            console.log(userRole, userRoleValue);
             return true
           }
         }

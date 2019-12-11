@@ -128,6 +128,17 @@ class ComponentTypes extends React.Component{
     this.setState({typesObject})
   }
 
+  duplicate = (item)=>{
+    const uid = uuid()
+
+    const typesObject = update(this.state.typesObject, {
+      [uid]:{
+        $set:item
+      }
+    })
+    this.setState({typesObject})
+  }
+
   changeValue(uid, prop, value){
 
     const typesObject = update(this.state.typesObject, {
@@ -227,7 +238,11 @@ class ComponentTypes extends React.Component{
             <Table.Body>
               {typesObject && Object.entries(typesObject).map(([key, value], index)=>(
                 <Table.Row key={index}>
-                  <Table.Cell>{index}</Table.Cell>
+                  <Table.Cell>
+                    <p>{index}</p>
+                    <Button onClick={(e)=>this.duplicate(value)}><Icon name='copy'/></Button>
+
+                  </Table.Cell>
                   <Table.Cell>
                     <Input value={value.id} onChange={(e)=>this.changeValue(key, 'id', e.target.value)} />
                     <Input value={value.name} onChange={(e)=>this.changeValue(key, 'name', e.target.value)} />
@@ -259,7 +274,9 @@ class ComponentTypes extends React.Component{
                               <Table.Cell ><Input fluid value={prop.propname} onChange={(e)=>this.changeProp(key, i, 'propname', e.target.value)}></Input></Table.Cell>
                               <Table.Cell ><Input fluid value={prop.propType} onChange={(e)=>this.changeProp(key, i, 'propType', e.target.value)}></Input></Table.Cell>
                               <Table.Cell ><Input fluid value={prop.default} onChange={(e)=>this.changeProp(key, i, 'default', e.target.value)}></Input></Table.Cell>
+                              <Table.Cell ><Input fluid value={prop.unitprice} onChange={(e)=>this.changeProp(key, i, 'unitprice', e.target.value)}></Input></Table.Cell>
                               <Table.Cell collapsing><Checkbox checked={prop.permissions? (prop.permissions.TNMOOSTUSER === 'true' || prop.permissions.TNMOOSTUSER === true) : false} onChange={(e, {checked})=>this.setPropPermission(key, i, 'permissions', "TNMOOSTUSER", checked)}/></Table.Cell>
+                              <Table.Cell collapsing><Checkbox checked={prop.permissions? (prop.permissions.TNMUSER === 'true' || prop.permissions.TNMUSER === true) : false} onChange={(e, {checked})=>this.setPropPermission(key, i, 'permissions', "TNMUSER", checked)}/></Table.Cell>
                               {/*<Table.Cell collapsing><Input value={prop.accessLevel} onChange={(e)=>this.changeProp(key, i, 'accessLevel', e.target.value)}></Input></Table.Cell>*/}
                             </Table.Row>
                           ))}
