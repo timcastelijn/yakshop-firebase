@@ -351,7 +351,7 @@ class Quote extends React.Component{
                         </Table.Cell>
                         <Table.Cell>
                           <PropEditor showtable object={item.properties} propHandler={this.handleEntryPropChange}/>
-                          <ul>
+                          {/*<ul>
                             {Array.isArray(item.properties) && item.properties.map((prop, index2)=>(
                               <li key={index2}>{prop.propname}:{prop.propValue? prop.propValue : prop.default}</li>
                             ))}
@@ -362,7 +362,7 @@ class Quote extends React.Component{
                             content={ <PropertyTable item={item} propHandler={this.handleEntryPropChange}/> }
                             actions={[{ key: 'cancel', content: 'Cancel', positive: false },{ key: 'done', content: 'Done', positive: true }]}
                             basic
-                          />
+                          />*/}
 
                         </Table.Cell>
                         <Table.Cell collapsing>{Math.round(item.price * 100)/100}</Table.Cell>

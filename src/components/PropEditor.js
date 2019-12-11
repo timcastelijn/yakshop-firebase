@@ -39,7 +39,10 @@ getData()
 
 
 
-
+const setPropValue = (prop, value) =>{
+  console.log(prop.propname, value);
+  prop.propValue = value
+}
 
 
 class TypedInput extends React.Component{
@@ -47,32 +50,41 @@ class TypedInput extends React.Component{
     super(props)
 
     this.state={
-      value:this.props.value
+      value:this.props.prop.propValue
     }
+
+    this.setValue = this.setValue.bind(this)
+  }
+
+  setValue(prop, value, updateFunc){
+    prop.propValue = value
+
+    this.setState({value:value})
+
+    updateFunc()
   }
 
   render(){
 
 
-    const {prop, propType} = this.props
+    const {prop, updateFunc} = this.props
+    const {value} = this.state
 
-    console.log(prop.propname, this.state.value);
-
-    switch (propType) {
+    switch (prop.propType) {
       case 'Material':
         return(
-          <Select value={this.state.value} options={LIST} onChange={(e, {value})=>{ setValue(prop, value, this.props.handleEntryPropChange)} } />
+          // <Select value={prop.propValue} options={LIST} onChange={(e, {value})=>{ setValue(prop, value, this.props.handleEntryPropChange)} } />
+          <Select value={value} options={LIST} onChange={(e, {value})=>{ this.setValue(prop, value, updateFunc)} } />
         )
         break;
       case 'Boolean':
-        const value = (this.state.value === 'true') || (this.state.value === true);
         return(
-          <Checkbox checked={value} onChange={(e, {checked})=>{ setValue(prop, checked, this.props.handleEntryPropChange) } }/>
+          <Checkbox checked={ (value === 'true') || (value === true) } onChange={(e, {checked})=>{ this.setValue(prop, checked, updateFunc) } }/>
         )
         break;
       default:
         return(
-          <Input value={this.state.value} onChange={this.props.handleChange}/>
+          <Input value={value} onChange={(e, {value})=>{ this.setValue(prop, value, updateFunc)} }/>
 
         )
     }
@@ -118,7 +130,7 @@ function setValue(prop, value, handleEntryPropChange){
   handleEntryPropChange('item.uid', prop.propname, value)
 }
 
-const createCells = ( prop, handleEntryPropChange)=>{
+const createCells = ( prop, updateFunc)=>{
 
   switch (getTypeString(prop)) {
     case 'number':
@@ -133,7 +145,7 @@ const createCells = ( prop, handleEntryPropChange)=>{
       return Object.entries(prop).map(([k, v])=>(
             <Table.Cell key={k}>
               {k =='propValue'?
-                <TypedInput value={v} propType={prop.propType} prop={prop} handleEntryPropChange={handleEntryPropChange} />
+                <TypedInput value={v} propType={prop.propType} prop={prop} updateFunc={updateFunc} />
                 :
                 // <Input defaultValue={v} />
                 null
@@ -173,7 +185,7 @@ class PropTable extends React.Component{
 
   render(){
 
-    const {object} = this.state;
+    const {object} = this.props;
 
     return(
       <Container>
@@ -184,7 +196,7 @@ class PropTable extends React.Component{
                   <Table.Cell>
                     {v.propname}
                   </Table.Cell>
-                  {createCells(v, this.props.propHandler)}
+                  {createCells(v, this.props.updateFunc)}
               </Table.Row>
             ))}
           </Table.Body>
@@ -206,6 +218,10 @@ class PropEditor extends React.Component{
   componentDidMount(){
   }
 
+  updateDisplay=()=>{
+    this.setState({object:this.props.object})
+  }
+
   render(){
     const {onChange} = this.state
 
@@ -216,9 +232,9 @@ class PropEditor extends React.Component{
             {
               this.props.showtable?
               <ul>
-                {Object.entries(this.props.object).map(([k, item], index)=>(
+                {Object.entries(this.state.object).map(([k, item], index)=>(
                     <li key={index}>
-                      {item.propname} {item.propValue !== undefined? JSON.stringify(item.propValue): <span style={{'color':'grey', 'fontStyle': 'oblique'}}>{item.default}</span>}
+                      {item.propname}: {item.propValue !== undefined? JSON.stringify(item.propValue): <span style={{'color':'grey', 'fontStyle': 'oblique'}}>{item.default}</span>}
                     </li>
                 ))}
               </ul>:null
@@ -226,7 +242,7 @@ class PropEditor extends React.Component{
             <Modal
               trigger={<Button><Icon name='edit'/></Button>}
               header='Edit'
-              content={ <PropTable object={this.state.object} propHandler={this.props.propHandler} /> }
+              content={ <PropTable object={this.props.object} updateFunc={this.updateDisplay}/> }
               actions={[{ key: 'cancel', content: 'Cancel', positive: false },{ key: 'done', content: 'Done', positive: true }]}
             />
 
