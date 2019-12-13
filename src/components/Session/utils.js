@@ -1,3 +1,7 @@
+import React from 'react';
+import AuthUserContext from './context';
+
+
 export function hasRights(authUser, permissions){
   if (authUser.roles.ADMIN === true) {
     return true
@@ -16,4 +20,16 @@ export function hasRights(authUser, permissions){
     }
   }
 
+}
+
+
+export const AuthFilter = (props)  =>  {
+  const {Component, auth} = props
+  return (
+        <AuthUserContext.Consumer>
+          {authUser =>
+            hasRights(authUser, auth) ? <Component {...props} /> : null
+          }
+        </AuthUserContext.Consumer>
+      );
 }

@@ -4,9 +4,10 @@ import uuid from 'uuidv4';
 import update from 'immutability-helper';
 import cloneDeep from 'lodash/cloneDeep'
 
+import XLSX, {writeFile} from 'xlsx'
 
 import { withFirebase } from '../Firebase';
-import { withAuthorization, AuthUserContext, hasRights } from '../Session';
+import { withAuthorization, AuthUserContext, hasRights, AuthFilter } from '../Session';
 
 import {Divider, Form, Table, Button, Checkbox, Icon, Input, Container, Select} from 'semantic-ui-react'
 import { Header, Modal } from 'semantic-ui-react'
@@ -22,9 +23,11 @@ const LIST = []
 const PRICETABLE ={}
 
 
+
+
 async function getData(){
   let sheet_id = '1zFOYXGWqCkAikd9tYFYlg-5wxXuC1biZ1RveHO_jWJk'
-  let range = 'Materialen!A1:M88';
+  let range = 'Materialen!A1:P100';
 
   let templist = await googleApi.getSheetData(sheet_id, range);
 
@@ -40,6 +43,8 @@ async function getData(){
 }
 
 getData()
+
+
 
 class Block{
   constructor(type){
@@ -163,6 +168,45 @@ class Quote extends React.Component{
     }
   }
 
+  exportQuote = ()=>{
+
+
+    const {quote} = this.state
+
+
+
+    const otherdata = []
+
+    otherdata.push( [ 'quoteid', quote.uid]     )
+    otherdata.push( [   'project name', quote.projectName ] )
+    otherdata.push( [   'date', quote.creationDate ] )
+    otherdata.push( [   'timestamp', quote.timeStamp ] )
+    otherdata.push( [    ] )
+
+    otherdata.push( ['id', 'type', 'count', 'price', 'subtotal'])
+
+    for (let [k, item] of Object.entries(quote.items)) {
+      otherdata.push( [item.uid, item.name, item.count, item.price, item.price * item.count])
+    }
+
+
+    /* original data */
+    var filename = quote.projectName + '.xlsx';
+    var ws_name = "SheetJS";
+
+    if(typeof console !== 'undefined') console.log(new Date());
+    var wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet(otherdata);
+
+    /* add worksheet to workbook */
+    XLSX.utils.book_append_sheet(wb, ws, ws_name);
+
+    /* write workbook */
+    if(typeof console !== 'undefined') console.log(new Date());
+    XLSX.writeFile(wb, filename);
+    if(typeof console !== 'undefined') console.log(new Date());
+
+  }
+
 
   handleEntryPropChange = ()=>{
 
@@ -188,6 +232,8 @@ class Quote extends React.Component{
       return false
     }
 
+    console.log('LOOKUP', PRICETABLE);
+
 
     let priceTotal = 0
 
@@ -203,6 +249,7 @@ class Quote extends React.Component{
         if (prop.unitprice){
           if(prop.propValue === 'true' || prop.propValue === true){
             price += parseFloat(prop.unitprice)
+            prop.price = parseFloat(prop.unitprice)
           }
         }
 
@@ -212,9 +259,8 @@ class Quote extends React.Component{
         var unitprice = Number(lookup.replace(/[^0-9.-]+/g,""));
         if( unitprice && parseFloat(prop.count) ){
           price += unitprice * parseFloat(prop.count)
+          prop.price = unitprice * parseFloat(prop.count)
         }
-
-
 
       }
       item.price = price
@@ -295,11 +341,11 @@ class Quote extends React.Component{
                 <Form>
                   <Form.Field inline>
                     <label>Materiaal Fronten</label>
-                    <Select value={0} options={LIST} onChange={(e, {value})=>{ console.log('ja zeetie')} } />
+                    <Select disabled value={'SPAN-MEL-WHI18'} options={LIST} onChange={(e, {value})=>{ console.log('ja zeetie')} } />
                   </Form.Field>
                   <Form.Field inline>
                     <label>Materiaal Blad</label>
-                    <Select value={0} options={LIST} onChange={(e, {value})=>{ console.log('ja zeetie')} } />
+                    <Select disabled value={'SPAN-MEL-WHI18'} options={LIST} onChange={(e, {value})=>{ console.log('ja zeetie')} } />
                   </Form.Field>
                 </Form>
               <Divider hidden> </Divider>
@@ -341,10 +387,9 @@ class Quote extends React.Component{
                           <PropEditor showtable object={item.properties} propHandler={this.handleEntryPropChange}/>
                         </Table.Cell>
                         <Table.Cell collapsing>{Math.round(item.price * 100)/100}</Table.Cell>
-                        { hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
-                            <Table.Cell collapsing ><Input style={{width:'70px'}} type='number' step={'0.1'}value={item.raiseFactor} onChange={(e) => this.handleEntryChange(item.uid, 'raiseFactor', e.target.value)}/></Table.Cell>
-                            :null
-                        }
+                        <AuthFilter Component={Table.Cell} auth={{"TNMUSER":true, 'ADMIN':true}}>
+                          <Input style={{width:'70px'}} type='number' step={'0.1'}value={item.raiseFactor} onChange={(e) => this.handleEntryChange(item.uid, 'raiseFactor', e.target.value)}/>
+                        </AuthFilter>
                       <Table.Cell collapsing>{Math.round(item.count * item.raiseFactor * item.price*100)/100}</Table.Cell>
                         <Table.Cell collapsing><Button icon onClick={()=>this.removeEntry(item.uid)}><Icon name='minus'/></Button></Table.Cell>
                       </Table.Row>
@@ -371,6 +416,7 @@ class Quote extends React.Component{
               <Divider hidden></Divider>
               <Container>
                 <Button onClick={this.storeQuote}>Save</Button>
+                <Button onClick={this.exportQuote}>Export</Button>
               </Container>
               <Divider hidden></Divider>
             </div>

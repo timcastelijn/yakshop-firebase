@@ -53,8 +53,6 @@ class SelectWithDataSourceAuth extends React.Component{
   componentDidMount(){
     let options = null
 
-
-
     if (this.props.dataSource == 'Firebase') {
 
       this.props.firebase.db.ref(`/componentTypes`).once('value').then((snapshot) => {

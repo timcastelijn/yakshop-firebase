@@ -9,7 +9,7 @@ import {  Header, Image, Modal } from 'semantic-ui-react'
 
 
 import { withFirebase } from './Firebase';
-import { withAuthorization, AuthUserContext, hasRights } from './Session';
+import { withAuthorization, AuthUserContext, hasRights, AuthFilter } from './Session';
 
 import GoogleApi from './Quote/GoogleApi.js'
 const googleApi = new GoogleApi()
@@ -28,14 +28,15 @@ async function getData(){
     if (keys.indexOf(item.id) != -1) {
       continue
     }
-    keys.push(item.id)
-    PRICETABLE[item.id] = item['prijs/pt']
-    LIST.push({key:item.id, value:item.id, text:item.name, data:item})
+    LIST.push(item)
   }
 }
 
 getData()
 
+const PriceTag = (value)=>(
+  <span>{Math.round(value*100 )/100}</span>
+)
 
 
 
@@ -44,6 +45,24 @@ const setPropValue = (prop, value) =>{
   prop.propValue = value
 }
 
+
+const FilteredSelect = ({list, value, filterarray, onChange})=> {
+  let filteredList = []
+
+
+
+  for (let item of list) {
+    // skip items that are not in filterarray if a filterarray is provided
+    if(filterarray && filterarray.indexOf(item.id) == -1){ continue };
+
+    filteredList.push({key:item.id, value:item.id, text:item.name, data:item})
+  }
+
+  return (
+    filteredList.length > 0?
+    <Select value={value} options={filteredList} onChange={onChange} />:<Select disabled></Select>
+  )
+}
 
 class TypedInput extends React.Component{
   constructor(props){
@@ -74,7 +93,8 @@ class TypedInput extends React.Component{
       case 'Material':
         return(
           // <Select value={prop.propValue} options={LIST} onChange={(e, {value})=>{ setValue(prop, value, this.props.handleEntryPropChange)} } />
-          <Select value={value} options={LIST} onChange={(e, {value})=>{ this.setValue(prop, value, updateFunc)} } />
+          // <Select value={value} list={optionList(LIST, ['SPAN_MEL_WHI18', 'SPAN_MEL_RED18'])} onChange={(e, {value})=>{ this.setValue(prop, value, updateFunc)} } />
+          <FilteredSelect value={value} list={LIST} filterarray={['SPAN-MST-GRN18', 'SPAN-MEL-WHI18', 'SPAN-MEL-RED18']} onChange={(e, {value})=>{ this.setValue(prop, value, updateFunc)} } />
         )
         break;
       case 'Boolean':
@@ -147,7 +167,8 @@ const createCells = ( prop, updateFunc)=>{
       break;
 
     case 'object':
-      return Object.entries(prop).map(([k, v])=>(
+      return Object.entries(prop).map(([k, v])=>
+          ( k == 'propname' || k =='propValue' ?
             <Table.Cell key={k}>
               {k =='propValue'?
                 <TypedInput value={v} propType={prop.propType} prop={prop} updateFunc={updateFunc} />
@@ -155,8 +176,10 @@ const createCells = ( prop, updateFunc)=>{
                 // <Input defaultValue={v} />
                 null
               }
-            </Table.Cell>
-          ))
+            </Table.Cell>:null
+          )
+
+          )
       break;
 
     case 'array':
@@ -216,6 +239,10 @@ class PropTable extends React.Component{
   }
 }
 
+const Span = (props) =>(
+  <span>{props.children}</span>
+)
+
 class PropEditor extends React.Component{
   constructor(props){
     super(props)
@@ -248,7 +275,15 @@ class PropEditor extends React.Component{
                         if (hasRights(authUser, item.permissions)) {
                           return (
                               <li key={index}>
-                                  {item.propname}: {item.propValue !== undefined? JSON.stringify(item.propValue): <span style={{'color':'grey', 'fontStyle': 'oblique'}}>{item.default}</span>}
+                                  <span>{item.propname}:</span>
+                                  <span>
+                                    {item.propValue !== undefined?
+                                      JSON.stringify(item.propValue):
+                                      <span style={{'color':'grey', 'fontStyle': 'oblique'}}>{item.default}</span>}
+                                  </span>
+                                  <AuthFilter Component={Span} auth={{'ADMIN':true}}>
+                                    {' - '}€{Math.round(item.price*100)/100}
+                                  </AuthFilter>
                               </li>:null
                             )
                         }
