@@ -46,6 +46,8 @@
     ]
   },
   "devDependencies": {
-    "papaparse": "^5.1.0"
+    "gulp-util": "^3.0.8",
+    "papaparse": "^5.1.0",
+    "vinyl-ftp": "^0.6.1"
   }
 }

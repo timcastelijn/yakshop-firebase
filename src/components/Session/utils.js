@@ -24,7 +24,8 @@ export function hasRights(authUser, permissions){
 
 
 export const AuthFilter = (props)  =>  {
-  const {Component, auth} = props
+  const {as, auth} = props
+  const Component = as
   return (
         <AuthUserContext.Consumer>
           {authUser =>

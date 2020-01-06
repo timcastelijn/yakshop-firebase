@@ -62,7 +62,6 @@ class SelectWithDataSourceAuth extends React.Component{
         for (let [key, item]  of Object.entries(this.typesObject)) {
 
           if( hasRights(this.props.authUser, item.permissions)){
-            console.log(item.name);
             options.push({
               key:key,
               value:key,

@@ -46,21 +46,20 @@ const setPropValue = (prop, value) =>{
 }
 
 
-const FilteredSelect = ({list, value, filterarray, onChange})=> {
-  let filteredList = []
+export const FilteredSelect = (props)=> {
+  const options = []
 
 
-
-  for (let item of list) {
+  for (let item of props.options) {
     // skip items that are not in filterarray if a filterarray is provided
-    if(filterarray && filterarray.indexOf(item.id) == -1){ continue };
+    if(props.filterarray && props.filterarray.indexOf(item.id) == -1){ continue };
 
-    filteredList.push({key:item.id, value:item.id, text:item.name, data:item})
+    options.push({key:item.id, value:item.id, text:item.name, data:item})
   }
 
   return (
-    filteredList.length > 0?
-    <Select value={value} options={filteredList} onChange={onChange} />:<Select disabled></Select>
+    options.length > 0?
+    <Select {...props} options={options} />:<Select options={[]} disabled></Select>
   )
 }
 
@@ -94,7 +93,7 @@ class TypedInput extends React.Component{
         return(
           // <Select value={prop.propValue} options={LIST} onChange={(e, {value})=>{ setValue(prop, value, this.props.handleEntryPropChange)} } />
           // <Select value={value} list={optionList(LIST, ['SPAN_MEL_WHI18', 'SPAN_MEL_RED18'])} onChange={(e, {value})=>{ this.setValue(prop, value, updateFunc)} } />
-          <FilteredSelect value={value} list={LIST} filterarray={['SPAN-MST-GRN18', 'SPAN-MEL-WHI18', 'SPAN-MEL-RED18']} onChange={(e, {value})=>{ this.setValue(prop, value, updateFunc)} } />
+          <FilteredSelect value={value} options={LIST} filterarray={['SPAN-MST-GRN18', 'SPAN-MEL-WHI18', 'SPAN-MEL-RED18']} onChange={(e, {value})=>{ this.setValue(prop, value, updateFunc)} } />
         )
         break;
       case 'Boolean':
@@ -281,7 +280,7 @@ class PropEditor extends React.Component{
                                       JSON.stringify(item.propValue):
                                       <span style={{'color':'grey', 'fontStyle': 'oblique'}}>{item.default}</span>}
                                   </span>
-                                  <AuthFilter Component={Span} auth={{'ADMIN':true}}>
+                                  <AuthFilter as={Span} auth={{'ADMIN':true}}>
                                     {' - '}€{Math.round(item.price*100)/100}
                                   </AuthFilter>
                               </li>:null

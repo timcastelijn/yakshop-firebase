@@ -15,8 +15,7 @@ import { Header, Modal } from 'semantic-ui-react'
 import GoogleApi from './GoogleApi.js'
 import SelectWithDataSource from './../SelectWithDataSource.js'
 
-import PropTable from '../PropTable.js'
-import PropEditor from '../PropEditor.js'
+import PropEditor, {FilteredSelect} from '../PropEditor.js'
 
 const googleApi = new GoogleApi()
 const LIST = []
@@ -38,7 +37,7 @@ async function getData(){
     }
     keys.push(item.id)
     PRICETABLE[item.id] = item['prijs/pt']
-    LIST.push({key:item.id, value:item.id, text:item.name, data:item})
+    LIST.push(item)
   }
 }
 
@@ -84,6 +83,9 @@ class Quote extends React.Component{
         projectName:'',
         items:{}
       },
+      globalBlad:'SPAN-MEL-WHI18',
+      globalSpatwand:'SPAN-MEL-WHI18',
+      globalFront:'SPAN-MEL-WHI18',
       typeOptions:[]
 
     }
@@ -303,6 +305,36 @@ class Quote extends React.Component{
     this.setState({quote})
   }
 
+  setGlobalMaterial(id, value){
+
+    const lookup = {
+      'm2 - front':'globalFront',
+      'm3 - blad':'globalBlad',
+      'm4 - spatwand':'globalSpatwand',
+    }
+
+    console.log(lookup[id], value);
+
+    const newState = update(this.state, {
+      [lookup[id]]:{$set:value}
+    })
+
+
+    for (let [k, item] of Object.entries(newState.quote.items)) {
+      for (let property of item.properties) {
+        if(property.propname === id){
+          property.propValue = value
+        }
+      }
+    }
+
+
+
+    this.updatePriceTotal(newState.quote)
+
+    this.setState(newState)
+  }
+
   storeQuote = ()=>{
 
     const {uid, quote} = this.state;
@@ -311,7 +343,7 @@ class Quote extends React.Component{
   }
 
   render(){
-    const {uid, isLoading, typeOptions} = this.state;
+    const {uid, isLoading, typeOptions, globalBlad, globalSpatwand, globalFront} = this.state;
     const {ownerName, items, dateCreated, projectName, priceTotal} = this.state.quote;
 
     return(
@@ -341,11 +373,15 @@ class Quote extends React.Component{
                 <Form>
                   <Form.Field inline>
                     <label>Materiaal Fronten</label>
-                    <Select disabled value={'SPAN-MEL-WHI18'} options={LIST} onChange={(e, {value})=>{ console.log('ja zeetie')} } />
+                    <FilteredSelect value={globalFront} options={LIST} filterarray={['SPAN-MST-GRN18', 'SPAN-MEL-WHI18', 'SPAN-MEL-RED18']} onChange={(e, {value})=>{ this.setGlobalMaterial('m2 - front', value) } } />
                   </Form.Field>
                   <Form.Field inline>
                     <label>Materiaal Blad</label>
-                    <Select disabled value={'SPAN-MEL-WHI18'} options={LIST} onChange={(e, {value})=>{ console.log('ja zeetie')} } />
+                    <FilteredSelect value={globalBlad} options={LIST} filterarray={['SPAN-MST-GRN18', 'SPAN-MEL-WHI18', 'SPAN-MEL-RED18']} onChange={(e, {value})=>{ this.setGlobalMaterial('m3 - blad', value)} } />
+                  </Form.Field>
+                  <Form.Field inline>
+                    <label>Materiaal Spatwand</label>
+                    <FilteredSelect value={globalSpatwand} options={LIST} filterarray={['SPAN-MST-GRN18', 'SPAN-MEL-WHI18', 'SPAN-MEL-RED18']} onChange={(e, {value})=>{ this.setGlobalMaterial('m4 - spatwand', value) } } />
                   </Form.Field>
                 </Form>
               <Divider hidden> </Divider>
@@ -363,9 +399,9 @@ class Quote extends React.Component{
                     <Table.HeaderCell>type</Table.HeaderCell>
                     <Table.HeaderCell>properties</Table.HeaderCell>
                     <Table.HeaderCell>price</Table.HeaderCell>
-                    { hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
+                    {/*{ hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
                       <Table.HeaderCell>raise factor</Table.HeaderCell>:null
-                    }
+                    }*/}
                     <Table.HeaderCell>subtotal</Table.HeaderCell>
                     <Table.HeaderCell></Table.HeaderCell>
                   </Table.Row>
@@ -387,9 +423,9 @@ class Quote extends React.Component{
                           <PropEditor showtable object={item.properties} propHandler={this.handleEntryPropChange}/>
                         </Table.Cell>
                         <Table.Cell collapsing>{Math.round(item.price * 100)/100}</Table.Cell>
-                        <AuthFilter Component={Table.Cell} auth={{"TNMUSER":true, 'ADMIN':true}}>
+                        {/*<AuthFilter as={Table.Cell} auth={{"TNMUSER":true, 'ADMIN':true}}>
                           <Input style={{width:'70px'}} type='number' step={'0.1'}value={item.raiseFactor} onChange={(e) => this.handleEntryChange(item.uid, 'raiseFactor', e.target.value)}/>
-                        </AuthFilter>
+                        </AuthFilter>*/}
                       <Table.Cell collapsing>{Math.round(item.count * item.raiseFactor * item.price*100)/100}</Table.Cell>
                         <Table.Cell collapsing><Button icon onClick={()=>this.removeEntry(item.uid)}><Icon name='minus'/></Button></Table.Cell>
                       </Table.Row>
@@ -399,10 +435,10 @@ class Quote extends React.Component{
                   <Table.Row>
                     <Table.HeaderCell />
                     <Table.HeaderCell colSpan='6'/>
-                      { hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
+                      {/*{ hasRights(authUser, {"TNMUSER":true, 'ADMIN':true})?
                           <Table.HeaderCell />:null
-                      }
-                    <Table.HeaderCell >{Math.round(priceTotal * 100)/100}</Table.HeaderCell >
+                      }*/}
+                    <Table.HeaderCell >{priceTotal? Math.round(priceTotal * 100)/100 : null}</Table.HeaderCell >
                     <Table.HeaderCell >
                       <Button icon onClick = {this.addEntry}>
                         <Icon name='plus'/>
