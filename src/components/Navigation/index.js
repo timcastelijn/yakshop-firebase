@@ -102,6 +102,7 @@ const NavigationAuth = ({ authUser }) => {
       {/*<Menu.Item as={Link} to={ROUTES.LANDING} name='landing' active={activeItem === 'landing'}  />*/}
       <Menu.Item as={Link} to={ROUTES.LANDING} name='Builder' active={activeItem === 'Builder'}  />
       <Menu.Item as={Link} to={'/Library'} name='Library' active={activeItem === 'Library'}  />
+      <Menu.Item as={Link} to={'/About'} name='About' active={activeItem === 'About'}  />
 
       <Menu.Menu position='right'>
         <Menu.Item as={Link} to={ROUTES.ACCOUNT} name='account' active={activeItem === 'account'}  />
@@ -123,6 +124,8 @@ const NavigationNonAuth = () => {
     <SideBarWrapper>
         <Menu.Item as={Link} to={ROUTES.LANDING} name='Builder' active={activeItem === 'Builder'}  />
         <Menu.Item as={Link} to={'/Library'} name='Library' active={activeItem === 'Library'}  />
+        <Menu.Item as={Link} to={'/About'} name='About' active={activeItem === 'About'}  />
+
         <Menu.Menu position='right'>
 
           <Menu.Item as={Link} to={ROUTES.SIGN_IN} name='sign in' active={activeItem === 'sign in'}  />

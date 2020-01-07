@@ -95,7 +95,7 @@ class Viewer extends React.Component{
 
   render(){
     return(
-      <div className='fluid' style={{'background':'#cccccc', textAlign:'center', verticalAlign:'middle', height:'100%'}}>
+      <div className='fluid' style={{'background':'#cccccc', textAlign:'center', verticalAlign:'middle', height:'100vh', overflow:'hidden'}}>
         <Renderer/>
       </div>
     )

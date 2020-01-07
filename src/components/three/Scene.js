@@ -23,11 +23,14 @@ export class Scene{
         var light = new THREE.HemisphereLight(0xffffff, 0x0C056D, 0.6);
         this.scene.add(light);
 
-        var light = new THREE.DirectionalLight(0x590D82, 0.5);
-        light.position.set(20, 30, 40);
+        var light = new THREE.DirectionalLight(0x7fabc7, 1);
+        light.position.set(2, 3, 4);
         this.scene.add(light);
+        // var helper = new THREE.DirectionalLightHelper( light, 5 );
+        // this.scene.add( helper );
+
         var light2 = light.clone();
-        light2.position.set(-20, 30, 40);
+        light2.position.set(2, 3, -4);
         this.scene.add(light2);
 
 
