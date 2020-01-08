@@ -46,7 +46,7 @@ export class Scene{
 
 
         const geometry = new THREE.BoxGeometry(3, 3, 3)
-        const material = new THREE.MeshBasicMaterial({ color: '#433F81'     })
+        const material = new THREE.MeshPhongMaterial({ color: '#433F81'     })
         this.cube = new THREE.Mesh(geometry, material)
         this.scene.add(this.cube)
 

@@ -1,10 +1,49 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {Menu, Divider, Button, Form, Grid, Header, Image, Message, Segment} from 'semantic-ui-react'
+import {Container, Menu, Divider, Button, Form, Grid, Header, Image, Message, Segment, Label, Icon} from 'semantic-ui-react'
 
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import {Scene} from './three/Scene.js'
+
+class ViewerUI extends React.Component{
+  constructor(props){
+    super(props)
+  }
+
+  render(){
+    return(
+        <div style={{position:'absolute', width:'100vw', bottom:'0px', padding:'10px', overflow:'hidden'}}>
+          <Grid columns={3}>
+            <Grid.Column textAlign='left'>
+              <Form.Group inline>
+                <Label size='large'>
+                  <Icon name='euro' /> 23
+                </Label>
+                <Button icon='shopping cart' />
+              </Form.Group>
+            </Grid.Column>
+            <Grid.Column>
+              <Form.Group inline>
+                <Button icon='mouse pointer' />
+                <Button icon='undo' />
+                <Button icon='redo' />
+                <Button icon='trash' />
+              </Form.Group>
+            </Grid.Column>
+            <Grid.Column textAlign='right'>
+              <Form.Group inline>
+                <Button icon='file' />
+                <Button icon='save' />
+                <Button icon='folder' />
+                <Button icon='upload' />
+              </Form.Group>
+            </Grid.Column>
+          </Grid>
+        </div>
+    )
+  }
+}
 
 class Renderer extends React.Component{
   componentDidMount(){
@@ -97,6 +136,7 @@ class Viewer extends React.Component{
     return(
       <div className='fluid' style={{'background':'#cccccc', textAlign:'center', verticalAlign:'middle', height:'100vh', overflow:'hidden'}}>
         <Renderer/>
+        <ViewerUI/>
       </div>
     )
   }
