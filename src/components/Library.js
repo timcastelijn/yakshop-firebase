@@ -93,7 +93,7 @@ class Library extends React.Component{
 
     return(
       <div>
-        <h1>Model Library</h1>
+        <h1>User Models </h1>
 
           {loading?
             <h1>Loading...</h1>
@@ -132,6 +132,7 @@ class Library extends React.Component{
             </Grid.Column>
           ))}
         </Grid>
+        <h1>Preconfiured models </h1>
 
         <Item.Group link>
           <Item>

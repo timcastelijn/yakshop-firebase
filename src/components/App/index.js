@@ -18,6 +18,7 @@ import Quotes from '../Quotes';
 import Viewer from '../Viewer';
 import Library from '../Library';
 import Quote from '../Quote';
+import AboutPage from '../AboutPage';
 import AccountPage from '../Account';
 import AdminPage from '../Admin';
 import MillingStats from '../MillingStats.js';
@@ -46,6 +47,7 @@ const App = () => (
             component={PasswordForgetPage}
           />
           <Route path={'/Library'} component={Library} />
+          <Route path={'/About'} component={AboutPage} />
           <Route path={ROUTES.HOME} component={HomePage} />
           <Route path={'/quotes'} component={Quotes} />
           <Route path={'/millingstats'} component={MillingStats} />

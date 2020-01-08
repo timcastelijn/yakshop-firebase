@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "authtest-722c4"
+    "default": "authtest-722c4",
+    "rabctest": "rabctest-2cba6"
   }
 }
