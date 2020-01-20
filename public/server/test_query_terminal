@@ -1,0 +1,1 @@
+curl -d "myvars=0&query_var=INSERT INTO models (id,name,content, img, user_id,ntent', 'testimg' ,'testuserid' ,'testusername' , 0, 9  )&secret=W?U7rN8Owd" https://timcastelijn.nl/fabfield/app/server/tc_mysql.php

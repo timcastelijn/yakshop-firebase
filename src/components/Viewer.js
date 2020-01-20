@@ -46,7 +46,12 @@ class ViewerUI extends React.Component{
 }
 
 class Renderer extends React.Component{
-  componentDidMount(){
+
+  constructor(props){
+    super(props)
+  }
+
+  async componentDidMount(){
 
 
     const width = this.mount.clientWidth
@@ -64,17 +69,59 @@ class Renderer extends React.Component{
     //ADD RENDERER
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio( window.devicePixelRatio );
-    // this.renderer.setClearColor('#000000')
-    this.renderer.setClearColor(0xA9E7DA);
+    this.renderer.setClearColor('#cccccc')
+    // this.renderer.setClearColor(0xA9E7DA);
     this.renderer.setSize(width, height)
     this.mount.appendChild(this.renderer.domElement)
 
     this.scene = new Scene(this.camera, this.renderer)
 
+    
+
+    // modelLoading
+    const modelId = this.props.match.params.modelId
+    if (modelId === 'new') {
+      // create empty field
+
+    }else if (true) {
+      this.loadModel(modelId)
+    }
+
+
+
+
     this.onWindowResize();
     window.addEventListener('resize', this.onWindowResize);
 
     this.start()
+  }
+
+  loadModel = async (modelId) => {
+    try{
+        console.log(modelId);
+       if (!modelId) { throw 'modelId not defined' }
+
+       // query object, action 1 for 'GET'
+       const data = { table:'models', columns:["content", 'name'], criteria:{'id':modelId} }
+       data.action = 1
+
+       const response = await fetch('./server/mysql_handler.php',{
+               body: JSON.stringify(data), // must match 'Content-Type' header
+               headers: {'content-type': 'application/json'},
+               method: 'POST', // *GET, POST, PUT, DELETE, etc.
+             })
+
+       const result = await response.json();
+
+
+
+       console.log('answer', result);
+
+     } catch (e) {
+       console.log(e);
+     } finally {
+
+     }
   }
 
   onWindowResize = () => {
@@ -132,10 +179,14 @@ class Viewer extends React.Component{
     super(props)
   }
 
+  async componentDidMount(){
+
+  }
+
   render(){
     return(
       <div className='fluid' style={{'background':'#cccccc', textAlign:'center', verticalAlign:'middle', height:'100vh', overflow:'hidden'}}>
-        <Renderer/>
+        <Renderer {...this.props}/>
         <ViewerUI/>
       </div>
     )
