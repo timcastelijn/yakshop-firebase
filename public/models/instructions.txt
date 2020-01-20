@@ -1,0 +1,8 @@
+
+
+
+export
+blender=>three
+- scene: materials
+- morph animation
+- Shading: Face materials
