@@ -44,19 +44,44 @@ class Library extends React.Component{
     }
   }
 
-  componentDidMount(){
+  // componentDidMount(){
+  //
+  //   this.setState({loading:true});
+  //
+  //   this.props.firebase.db.ref('models/').on("value", snapshot => {
+  //     const modelList = snapshot.val();
+  //
+  //     console.log(modelList);
+  //     this.setState({
+  //       models: modelList,
+  //       loading: false,
+  //     });
+  //   })
+  // }
 
-    this.setState({loading:true});
+  componentDidMount() {
+    this.setState({ loading: true });
 
-    this.props.firebase.db.ref('models/').on("value", snapshot => {
-      const modelList = snapshot.val();
+    this.unsubscribe = this.props.firebase
+      .models()
+      // .orderBy('createdAt', 'desc')
+      .limit(30)
+      .onSnapshot(snapshot => {
+        let models = [];
 
-      console.log(modelList);
-      this.setState({
-        models: modelList,
-        loading: false,
+        snapshot.forEach(doc =>
+          models.push({ ...doc.data(), uid: doc.id }),
+        );
+
+        this.setState({
+          models:models.reverse(),
+          loading: false,
+        });
       });
-    })
+  }
+
+  componentWillUnmount() {
+    this.unsubscribe && this.unsubscribe();
   }
 
   saveEntry = (e, data)=>{
@@ -108,7 +133,7 @@ class Library extends React.Component{
 
                 <Item.Content>
                   <Item.Header>uuid: {k}</Item.Header>
-                  <Item.Description>content: {v}</Item.Description>
+                  <Item.Description>content: {v.name}</Item.Description>
                   <Item.Description>{paragraph}</Item.Description>
                   <Item.Description>
                     {/*<Button icon onClick = {this.deleteEntry}>*/}

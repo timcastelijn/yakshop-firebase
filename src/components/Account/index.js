@@ -9,6 +9,14 @@ const AccountPage = () => (
     {authUser => (
       <div>
         <h1>Account: {authUser.email}</h1>
+        <p>username: {authUser.username}</p>
+        <p>roles:</p>
+        <ul>
+        { Object.entries(authUser.roles).map(([role, value])=>(
+          value? <li>{role}</li>:null
+        ))
+        }
+        </ul>
         <PasswordForgetForm />
         <PasswordChangeForm />
       </div>
