@@ -37,6 +37,9 @@ const App = () => (
         <Navigation/>
 
         <Route exact path={ROUTES.LANDING} component={Viewer} />
+        <Route path={'/Builder'} component={Viewer} />
+        <Route exact path={'/Builder/:id'} component={Viewer} />
+
         {/*<Route path={ROUTES.SIGN_UP} component={SignUpPage} />*/}
         <div style={{height:'100vh', overflow:'auto'}}>
 
@@ -53,7 +56,7 @@ const App = () => (
           <Route path={'/millingstats'} component={MillingStats} />
           <Route path={'/timetracking'} component={TimeTrackingPage} />
           <Route path={'/timetracking/:code'} component={ResponseCode} />
-          
+
           <Route path={ROUTES.ACCOUNT} component={AccountPage} />
           <Route path={ROUTES.ADMIN} component={AdminPage} />
         </Container>
