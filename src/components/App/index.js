@@ -37,8 +37,10 @@ const App = () => (
         <Navigation/>
 
         <Route exact path={ROUTES.LANDING} component={Viewer} />
-        <Route path={'/Builder'} component={Viewer} />
-        <Route exact path={'/Builder/:id'} component={Viewer} />
+        {/*<Route path={'/Builder'} component={Viewer} />*/}
+        <Route exact path={'/Builder/:id'} render={(props)=>(
+          <Viewer key={props.match.params.id} {...props}/>
+        )}/>
 
         {/*<Route path={ROUTES.SIGN_UP} component={SignUpPage} />*/}
         <div style={{height:'100vh', overflow:'auto'}}>
@@ -66,4 +68,14 @@ const App = () => (
 
   </Router>
 );
+
+
+const createRenderer = ()=>{
+    console.log('createRenderer once');
+}
+
+createRenderer()
+
+
+
 export default withAuthentication(App);

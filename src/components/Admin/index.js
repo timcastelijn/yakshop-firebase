@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {Button, Table, Icon, Confirm} from 'semantic-ui-react'
+import {Button, Table, Icon, Confirm, Input} from 'semantic-ui-react'
 
 import axios from 'axios';
 import moment from 'moment'
@@ -113,8 +113,12 @@ class AdminPage extends Component {
         <UserList users={users} />
 
         <h1>Models</h1>
-        <input type="file" onChange={this.onFileChange} />
-        <Button onClick={this.onFileUpload}>Click Here</Button>
+        <div>
+          <span>upload from .json </span>
+          {/*<input type="file" onChange={this.onFileChange} />*/}
+          <Input type="file" onChange={this.onFileChange} />
+          <Button onClick={this.onFileUpload}>Click Here</Button>
+        </div>
         <Table>
           <Table.Header>
             <Table.HeaderCell>ID</Table.HeaderCell>
