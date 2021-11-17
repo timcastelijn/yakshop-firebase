@@ -81,5 +81,7 @@ export class Renderer{
   renderScene = () => {
     // console.log(new Date());
     this.renderer.render(this.scene, this.camera)
+    g.labelRenderer.render(this.scene, this.camera );
+
   }
 }

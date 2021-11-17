@@ -13,7 +13,11 @@ export class SceneManager{
   }
 
 
+
   loadModel(content){
+
+    // this.init()
+
     const geometry = new THREE.BoxGeometry(3, 3,3)
 
     const material = new THREE.MeshPhongMaterial({ color: '#433F81'     })
@@ -38,6 +42,16 @@ export class SceneManager{
 
   }
 
+  async doThis(){
+
+    console.log('TEST');
+    const file = await fetch('models/library_blocks/wi_i.json')
+    const model = await file.json()
+
+    console.log('model', model);
+
+
+  }
 
 
   saveModel(){

@@ -8,6 +8,7 @@ import { withAuthorization } from './Session';
 
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 
 import {g} from '../globals.js';
 import {Scene} from './three/Scene.js'
@@ -75,6 +76,15 @@ class Viewer extends React.Component{
       this.renderer.mount = this.mount
 
       this.mount.appendChild(this.renderer.renderer.domElement)
+
+
+			g.labelRenderer = new CSS2DRenderer();
+			g.labelRenderer.setSize( window.innerWidth, window.innerHeight );
+			g.labelRenderer.domElement.style.position = 'absolute';
+			g.labelRenderer.domElement.style.top = '50px';
+			g.labelRenderer.domElement.style['pointer-events'] = 'none';;
+			this.mount.appendChild( g.labelRenderer.domElement );
+
       this.renderer.onWindowResize()
 
       const sceneManager = this.renderer.sceneManager
@@ -89,6 +99,9 @@ class Viewer extends React.Component{
           this.setState({loading:false})
         }
       }
+
+      sceneManager.init()
+
     }
 
 
