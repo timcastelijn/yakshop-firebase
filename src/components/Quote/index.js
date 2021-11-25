@@ -12,12 +12,13 @@ import { withAuthorization, AuthUserContext, hasRights, AuthFilter } from '../Se
 import {Divider, Form, Table, Button, Checkbox, Icon, Input, Container, Select} from 'semantic-ui-react'
 import { Header, Modal } from 'semantic-ui-react'
 
-import GoogleApi from './GoogleApi.js'
+// import GoogleApi from './GoogleApi.js'
 import SelectWithDataSource from './../SelectWithDataSource.js'
 
 import PropEditor, {FilteredSelect} from '../PropEditor.js'
 
-const googleApi = new GoogleApi()
+// const googleApi = new GoogleApi()
+const googleApi = {}
 const LIST = []
 const PRICETABLE ={}
 

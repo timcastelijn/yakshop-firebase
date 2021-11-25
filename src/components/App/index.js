@@ -17,7 +17,7 @@ import HomePage from '../Home';
 import Quotes from '../Quotes';
 import Viewer from '../Viewer';
 import Library from '../Library';
-import Quote from '../Quote';
+// import Quote from '../Quote';
 import AboutPage from '../AboutPage';
 import AccountPage from '../Account';
 import AdminPage from '../Admin';
@@ -37,9 +37,12 @@ const App = () => (
         <Navigation/>
 
         <Route exact path={ROUTES.LANDING} component={Viewer} />
+        {/*<Route path={'/Builder'} component={Viewer} />*/}
+        <Route exact path={'/Builder/:id'} render={(props)=>(
+          <Viewer key={props.match.params.id} {...props}/>
+        )}/>
+
         {/*<Route path={ROUTES.SIGN_UP} component={SignUpPage} />*/}
-        <Route path={'/builder'} component={Viewer} />
-        <Route path={'/builder/:modelId'} component={Viewer} />
         <div style={{height:'100vh', overflow:'auto'}}>
 
         <Container>
@@ -56,7 +59,6 @@ const App = () => (
           <Route path={'/timetracking'} component={TimeTrackingPage} />
           <Route path={'/timetracking/:code'} component={ResponseCode} />
 
-          <Route path={ROUTES.QUOTE} component={Quote} />
           <Route path={ROUTES.ACCOUNT} component={AccountPage} />
           <Route path={ROUTES.ADMIN} component={AdminPage} />
         </Container>
@@ -66,4 +68,14 @@ const App = () => (
 
   </Router>
 );
+
+
+const createRenderer = ()=>{
+    console.log('createRenderer once');
+}
+
+createRenderer()
+
+
+
 export default withAuthentication(App);

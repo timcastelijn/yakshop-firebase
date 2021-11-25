@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
+import moment from 'moment'
 
 
 import { compose } from 'recompose';
@@ -44,19 +45,44 @@ class Library extends React.Component{
     }
   }
 
-  componentDidMount(){
+  // componentDidMount(){
+  //
+  //   this.setState({loading:true});
+  //
+  //   this.props.firebase.db.ref('models/').on("value", snapshot => {
+  //     const modelList = snapshot.val();
+  //
+  //     console.log(modelList);
+  //     this.setState({
+  //       models: modelList,
+  //       loading: false,
+  //     });
+  //   })
+  // }
 
-    this.setState({loading:true});
+  componentDidMount() {
+    this.setState({ loading: true });
 
-    this.props.firebase.db.ref('models/').on("value", snapshot => {
-      const modelList = snapshot.val();
+    this.unsubscribe = this.props.firebase
+      .models()
+      // .orderBy('createdAt', 'desc')
+      .limit(30)
+      .onSnapshot(snapshot => {
+        let models = [];
 
-      console.log(modelList);
-      this.setState({
-        models: modelList,
-        loading: false,
+        snapshot.forEach(doc =>
+          models.push({ ...doc.data(), uid: doc.id }),
+        );
+
+        this.setState({
+          models:models.reverse(),
+          loading: false,
+        });
       });
-    })
+  }
+
+  componentWillUnmount() {
+    this.unsubscribe && this.unsubscribe();
   }
 
   saveEntry = (e, data)=>{
@@ -87,6 +113,13 @@ class Library extends React.Component{
     this.setState({models:{[id]:model}})
   }
 
+  loadModel =(e, {value})=>{
+
+    console.log(e.currentTarget.dataset.id);
+
+    window.location = `/Builder/${e.currentTarget.dataset.id}`
+  }
+
   render(){
     const paragraph = <ImageComponent src='https://react.semantic-ui.com/images/wireframe/short-paragraph.png' />
     const {loading, models} = this.state
@@ -107,13 +140,16 @@ class Library extends React.Component{
                 <Item.Image size='tiny'  src='https://react.semantic-ui.com/images/wireframe/image.png' />
 
                 <Item.Content>
-                  <Item.Header>uuid: {k}</Item.Header>
-                  <Item.Description>content: {v}</Item.Description>
-                  <Item.Description>{paragraph}</Item.Description>
+                  <Item.Header>{v.name}</Item.Header>
+                  <Item.Header>{v.user_name}</Item.Header>
+                  <Item.Description>{
+                      v.modified?moment.unix(v.modified.seconds).format('YY/MM/DD hh:mm:ss'):null
+                    }</Item.Description>
+                  {/*<Item.Description>{paragraph}</Item.Description>*/}
                   <Item.Description>
                     {/*<Button icon onClick = {this.deleteEntry}>*/}
-                    <Button data-id={k} icon onClick = {this.deleteEntry}>
-                      <Icon name='trash' />
+                    <Button data-id={v.id} icon onClick = {this.loadModel}>
+                      <Icon name='folder open' />
                     </Button>
                     <Modal
                       trigger={
@@ -125,6 +161,9 @@ class Library extends React.Component{
                       content={ <PropEditor id={k} item={v} onChange={this.editEntry}/> }
                       actions={[{ key: 'done', id:k, content: 'Save', className:'primary', onClick:this.saveEntry }]}
                     />
+                  <Button data-id={k} icon onClick = {this.deleteEntry}>
+                    <Icon name='trash' />
+                  </Button>
 
                   </Item.Description>
                 </Item.Content>

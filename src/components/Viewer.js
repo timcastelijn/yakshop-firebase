@@ -1,10 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useEffect } from 'react-router-dom';
 import {Container, Menu, Divider, Button, Form, Grid, Header, Image, Message, Segment, Label, Icon} from 'semantic-ui-react'
+
+import { compose } from 'recompose';
+import { withFirebase } from './Firebase';
+import { withAuthorization } from './Session';
 
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+
+import {g} from '../globals.js';
 import {Scene} from './three/Scene.js'
+import {SceneManager} from './three/SceneManager.js'
+import {Renderer} from '../three/Renderer.js'
 
 class ViewerUI extends React.Component{
   constructor(props){
@@ -45,152 +54,120 @@ class ViewerUI extends React.Component{
   }
 }
 
-class Renderer extends React.Component{
-
-  constructor(props){
-    super(props)
-  }
-
-  async componentDidMount(){
-
-
-    const width = this.mount.clientWidth
-    const height = this.mount.clientHeight
-
-    //ADD CAMERA
-    this.camera = new THREE.PerspectiveCamera(
-      75,
-      width / height,
-      0.1,
-      1000
-    )
-    this.camera.position.set(   6,10,10);
-
-    //ADD RENDERER
-    this.renderer = new THREE.WebGLRenderer({ antialias: true })
-    this.renderer.setPixelRatio( window.devicePixelRatio );
-    this.renderer.setClearColor('#cccccc')
-    // this.renderer.setClearColor(0xA9E7DA);
-    this.renderer.setSize(width, height)
-    this.mount.appendChild(this.renderer.domElement)
-
-    this.scene = new Scene(this.camera, this.renderer)
-
-    
-
-    // modelLoading
-    const modelId = this.props.match.params.modelId
-    if (modelId === 'new') {
-      // create empty field
-
-    }else if (true) {
-      this.loadModel(modelId)
-    }
-
-
-
-
-    this.onWindowResize();
-    window.addEventListener('resize', this.onWindowResize);
-
-    this.start()
-  }
-
-  loadModel = async (modelId) => {
-    try{
-        console.log(modelId);
-       if (!modelId) { throw 'modelId not defined' }
-
-       // query object, action 1 for 'GET'
-       const data = { table:'models', columns:["content", 'name'], criteria:{'id':modelId} }
-       data.action = 1
-
-       const response = await fetch('./server/mysql_handler.php',{
-               body: JSON.stringify(data), // must match 'Content-Type' header
-               headers: {'content-type': 'application/json'},
-               method: 'POST', // *GET, POST, PUT, DELETE, etc.
-             })
-
-       const result = await response.json();
-
-
-
-       console.log('answer', result);
-
-     } catch (e) {
-       console.log(e);
-     } finally {
-
-     }
-  }
-
-  onWindowResize = () => {
-
-    const width = this.mount.clientWidth
-    const height = this.mount.clientHeight
-
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-
-    this.renderer.setSize( width , height );
-  }
-
-
-  componentWillUnmount(){
-    this.stop()
-    this.mount.removeChild(this.renderer.domElement)
-    window.removeEventListener('resize', this.onWindowResize);
-  }
-
-  start = () => {
-    if (!this.frameId) {
-      this.frameId = requestAnimationFrame(this.animate)
-    }
-  }
-
-  stop = () => {
-    cancelAnimationFrame(this.frameId)
-  }
-
-  animate = () => {
-
-
-   this.renderScene()
-   this.frameId = window.requestAnimationFrame(this.animate)
-  }
-
-  renderScene = () => {
-    this.renderer.render(this.scene, this.camera)
-  }
-
-  render(){
-      return(
-        <div
-          style={{ overflow:'hidden', width: '100%', height:"100%"}}
-          ref={(mount) => { this.mount = mount }}
-        />
-      )
-    }
-}
 
 class Viewer extends React.Component{
 
   constructor(props){
     super(props)
+
+    this.state ={
+      loading:false,
+    }
+
+
+    window.addEventListener('renderer-mounted', this.mountRenderer)
   }
+
 
   async componentDidMount(){
 
+    this.renderer = g.renderer
+    if(this.mount &&  this.renderer){
+      this.renderer.mount = this.mount
+
+      this.mount.appendChild(this.renderer.renderer.domElement)
+
+
+			g.labelRenderer = new CSS2DRenderer();
+			g.labelRenderer.setSize( window.innerWidth, window.innerHeight );
+			g.labelRenderer.domElement.style.position = 'absolute';
+			g.labelRenderer.domElement.style.top = '50px';
+			g.labelRenderer.domElement.style['pointer-events'] = 'none';;
+			this.mount.appendChild( g.labelRenderer.domElement );
+
+      this.renderer.onWindowResize()
+
+      const sceneManager = this.renderer.sceneManager
+      const modelId = this.props.match.params.id
+      console.log('modelId',modelId, sceneManager.currentModelId);
+
+      if (modelId) {
+        if (modelId != sceneManager.currentModelId) {
+          this.setState({loading:true})
+          sceneManager.clearScene()
+          const loaded = await sceneManager.loadModel(modelId)
+          this.setState({loading:false})
+        }
+      }
+
+      sceneManager.init()
+
+    }
+
+
   }
 
+  // mountRenderer = async (event)=>{
+  //   console.log('this.mount', this.mount);
+  //   this.renderer = event.detail.renderer
+  //
+  //   function checkFlag(mount) {
+  //       if(!mount) {
+  //         console.log('wainting...');
+  //          window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
+  //       } else {
+  //         return mount
+  //         /* do something*/
+  //       }
+  //   }
+  //   const mount = await checkFlag(this.mount)
+  //
+  //   console.log('mount mounted');
+  //
+  //   if(this.mount &&  this.renderer){
+  //     console.log('this.mount', this.mount);
+  //     console.log('this.renderer', this.renderer);
+  //     this.renderer.mount = this.mount
+  //     this.mount.appendChild(this.renderer.renderer.domElement)
+  //
+  //     this.renderer.onWindowResize()
+  //
+  //   }
+  //
+  // }
+
+
+
   render(){
+
+    const {loading} = this.state
+
+    const loadingStyle = {
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      WebkitTransform: 'translate(-50%, -50%)',
+      transform: 'translate(-50%, -50%)',
+    }
+
     return(
       <div className='fluid' style={{'background':'#cccccc', textAlign:'center', verticalAlign:'middle', height:'100vh', overflow:'hidden'}}>
-        <Renderer {...this.props}/>
+        {loading?<div style={loadingStyle}>loading...</div>:null}
+        <div
+          style={{ overflow:'hidden', width: '100%', height:"100%"}}
+          ref={(mount) => { this.mount = mount }}
+        />
         <ViewerUI/>
       </div>
     )
   }
 }
 
-export default Viewer
+const renderer = new Renderer(g.firebase)
+
+
+
+// export default Viewer
+export default compose(
+  withFirebase,
+)(Viewer);

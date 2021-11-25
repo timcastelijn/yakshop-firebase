@@ -101,6 +101,7 @@ const NavigationAuth = ({ authUser }) => {
     <SideBarWrapper>
       {/*<Menu.Item as={Link} to={ROUTES.LANDING} name='landing' active={activeItem === 'landing'}  />*/}
       <Menu.Item as={Link} to={ROUTES.LANDING} name='Builder' active={activeItem === 'Builder'}  />
+      {/*<Menu.Item as={Link} to={ROUTES.LANDING} name='Builder' active={activeItem === 'Builder'}  />*/}
       <Menu.Item as={Link} to={'/Library'} name='Library' active={activeItem === 'Library'}  />
       <Menu.Item as={Link} to={'/About'} name='About' active={activeItem === 'About'}  />
 

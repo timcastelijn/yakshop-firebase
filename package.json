@@ -1,29 +1,25 @@
 {
   "name": "react-firebase2",
   "version": "0.1.0",
-  "homepage": "http://thenewmakers.com/tnmoffice",
   "private": true,
   "dependencies": {
-    "axios": "^0.19.0",
-    "firebase": "^6.6.0",
-    "gapi-client": "0.0.3",
-    "immutability-helper": "^3.0.1",
-    "memoize": "^0.1.1",
-    "moment": "^2.24.0",
-    "moment-timezone": "^0.5.26",
-    "query-string": "^6.8.3",
-    "react": "^16.9.0",
-    "react-dom": "^16.9.0",
-    "react-pivottable": "^0.9.0",
-    "react-router-dom": "^5.0.1",
-    "react-scripts": "^3.3.0",
-    "react-semantic-ui-datepickers": "^1.11.0",
+    "axios": "^0.24.0",
+    "firebase": "^9.2.0",
+    "immutability-helper": "^3.1.1",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.33",
+    "papaparse": "^5.3.1",
+    "query-string": "^7.0.1",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-pivottable": "^0.11.0",
+    "react-router-dom": "^5.3.0",
+    "react-scripts": "3.1.1",
     "recompose": "^0.30.0",
     "semantic-ui-css": "^2.4.1",
-    "semantic-ui-react": "^0.88.1",
-    "three": "^0.112.1",
-    "uuidv4": "^5.0.1",
-    "xlsx": "^0.15.3"
+    "semantic-ui-react": "^2.0.4",
+    "three": "^0.134.0",
+    "uuidv4": "^6.2.12"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -46,10 +42,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "gulp-util": "^3.0.8",
-    "papaparse": "^5.1.0",
-    "vinyl-ftp": "^0.6.1"
   }
 }
